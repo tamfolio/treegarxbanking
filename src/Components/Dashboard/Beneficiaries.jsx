@@ -10,7 +10,7 @@ import {
   PaperAirplaneIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
-import { useBeneficiaries, useBeneficiaryGroups, useDeleteBeneficiary } from '../../hooks/useBeneficiariessss';
+import { useBeneficiaries, useBeneficiaryGroups, useDeleteBeneficiary } from '../../hooks/useBeneficiaries';
 import BeneficiaryDetailsModal from '../Modals/BeneficiaryDetailsModal';
 import BulkGroupDetailsModal from '../Modals/BulkGroupDetailsModal';
 import PayoutModal from '../Modals/PayoutModal';

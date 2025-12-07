@@ -18,7 +18,7 @@ import {
   usePayout,
   useBulkPayout,
 } from "../../hooks/useTransactions";
-import { useBeneficiaries } from "../../hooks/useBeneficiariessss";
+import { useBeneficiaries } from "../../hooks/useBeneficiaries";
 
 const PayoutModal = ({
   isOpen,
