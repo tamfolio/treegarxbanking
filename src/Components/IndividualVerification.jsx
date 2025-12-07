@@ -88,7 +88,7 @@ const IndividualVerification = ({
 
     setLocalSubmitting(true);
     try {
-      const { verificationService } = await import('../services/verificationService');
+      const { verificationService } = await import('../services/verificationServicee');
       
       const result = await verificationService.submitIndividualKYC({
         customerCode,
@@ -114,7 +114,7 @@ const IndividualVerification = ({
 
     setLocalSubmitting(true);
     try {
-      const { verificationService } = await import('../services/verificationService');
+      const { verificationService } = await import('../services/verificationServicee');
       
       const result = await verificationService.submitIndividualKYC({
         customerCode,

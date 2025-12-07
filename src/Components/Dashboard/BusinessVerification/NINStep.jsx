@@ -28,7 +28,7 @@ const NINVerificationStep = ({
     setErrors({});
     
     try {
-      const { verificationService } = await import('../../../services/verificationService');
+      const { verificationService } = await import('../../../services/verificationServicee');
 
       const result = await verificationService.submitBusinessKYC({
         customerId,
