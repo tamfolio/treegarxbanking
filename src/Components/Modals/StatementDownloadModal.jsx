@@ -120,7 +120,7 @@ const StatementDownloadModal = ({ isOpen, onClose, onDownloadStart, onDownloadCo
     onDownloadStart && onDownloadStart();
   
     try {
-      const { statementService } = await import('../../services/statementService');
+      const { statementService } = await import('../../services/statementServicee');
   
       const result = await statementService.sendStatementToEmail({
         startDate: formData.startDate,
