@@ -139,7 +139,7 @@ const Login = () => {
             <div className="flex items-center justify-center mb-6">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-xl">T</span>
+                  <span className="text-white font-bold text-xl">TX</span>
                 </div>
                 <div className="text-2xl font-bold text-slate-800">Treegar X</div>
               </div>

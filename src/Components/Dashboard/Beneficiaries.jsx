@@ -643,10 +643,6 @@ const Beneficiaries = () => {
           bankId: selectedBeneficiary.bankId,
           accountNumber: selectedBeneficiary.accountNumber,
           beneficiaryName: selectedBeneficiary.name,
-          // Pre-fill with last transfer details if available
-          displayAmount: selectedBeneficiary.lastAmount ? selectedBeneficiary.lastAmount.toString() : '',
-          amount: selectedBeneficiary.lastAmount || 0,
-          narration: selectedBeneficiary.lastNarration || ''
         } : {}}
       />
     </div>

@@ -48,6 +48,29 @@ export const useResolveAccount = () => {
   });
 };
 
+// Hook for resolving customer by tag/code
+export const useResolveCustomer = () => {
+  return useMutation({
+    mutationFn: ({ identifier }) =>
+      transactionsService.resolveCustomer(identifier),
+  });
+};
+
+// Hook for P2P transfer (Tag Pay)
+export const useTagPay = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: transactionsService.tagPay,
+    onSuccess: () => {
+      // Invalidate transactions query to refresh the list
+      queryClient.invalidateQueries(['transactions']);
+      // Invalidate profile to refresh balance
+      queryClient.invalidateQueries(['profile']);
+    },
+  });
+};
+
 // Hook for payout
 export const usePayout = () => {
   const queryClient = useQueryClient();
