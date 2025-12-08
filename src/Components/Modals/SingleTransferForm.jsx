@@ -277,7 +277,7 @@ const SingleTransferForm = ({
     }
   };
 
-  const isLoading = payoutMutation.isLoading;
+  const isLoading = payoutMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

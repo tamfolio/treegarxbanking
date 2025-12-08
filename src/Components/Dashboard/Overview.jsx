@@ -31,11 +31,11 @@ const Overview = () => {
     kycStatus,
     verifications,
     profile,
-    isLoading,
+    isPending,
   } = useProfileData();
 
   // Get recent transactions (last 5)
-  const { data: transactionsData, isLoading: transactionsLoading } =
+  const { data: transactionsData, isPending: transactionsLoading } =
     useTransactions({
       pageNumber: 1,
       pageSize: 5,

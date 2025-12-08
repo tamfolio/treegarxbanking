@@ -26,7 +26,7 @@ const Transactions = () => {
 
   const { 
     data: transactionsData, 
-    isLoading: transactionsLoading, 
+    isPending: transactionsLoading, 
     error: transactionsError,
     refetch: refetchTransactions 
   } = useTransactions(filters);

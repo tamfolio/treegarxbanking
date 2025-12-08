@@ -169,7 +169,7 @@ const TagPayForm = ({
     }
   };
 
-  const isLoading = tagPayMutation.isLoading;
+  const isLoading = tagPayMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

@@ -348,12 +348,12 @@ const CorporateSignUp = ({ onBack }) => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={businessOnboardingMutation.isLoading}
+              disabled={businessOnboardingMutation.isPending}
               className={`w-full px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl shadow-lg shadow-green-600/25 hover:shadow-xl hover:shadow-green-600/30 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-green-600/20 transition-all duration-200 ${
-                businessOnboardingMutation.isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                businessOnboardingMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
               }`}
             >
-              {businessOnboardingMutation.isLoading ? (
+              {businessOnboardingMutation.isPending ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>Creating account...</span>

@@ -200,14 +200,14 @@ const ResetPassword = () => {
                 <button
                   type="button"
                   onClick={handleResendCode}
-                  disabled={timeLeft > 0 || resendCodeMutation.isLoading}
+                  disabled={timeLeft > 0 || resendCodeMutation.isPending}
                   className={`text-sm font-medium transition-colors ${
-                    timeLeft > 0 || resendCodeMutation.isLoading
+                    timeLeft > 0 || resendCodeMutation.isPending
                       ? 'text-slate-400 cursor-not-allowed'
                       : 'text-blue-600 hover:text-blue-700 hover:underline'
                   }`}
                 >
-                  {resendCodeMutation.isLoading ? 'Sending...' : 'Resend code'}
+                  {resendCodeMutation.isPending ? 'Sending...' : 'Resend code'}
                 </button>
               </div>
             </div>
@@ -285,12 +285,12 @@ const ResetPassword = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={resetPasswordMutation.isLoading}
+              disabled={resetPasswordMutation.isPending}
               className={`w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-600/20 transition-all duration-200 ${
-                resetPasswordMutation.isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                resetPasswordMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
               }`}
             >
-              {resetPasswordMutation.isLoading ? (
+              {resetPasswordMutation.isPending ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>Resetting password...</span>

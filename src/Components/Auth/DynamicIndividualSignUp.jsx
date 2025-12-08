@@ -16,7 +16,7 @@ const DynamicIndividualSignUp = ({ onBack }) => {
   // Fetch dynamic requirements
   const { 
     data: requirementsData, 
-    isLoading: requirementsLoading, 
+    isPending: requirementsLoading, 
     error: requirementsError 
   } = useOnboardingRequirements('Individual');
   
@@ -317,9 +317,9 @@ const DynamicIndividualSignUp = ({ onBack }) => {
                     onChange={handleInputChange}
                     error={errors[verification.type]}
                     isVerifying={
-                      (verification.type === 'bvn' && bvnVerification.isLoading) ||
-                      (verification.type === 'nin' && ninVerification.isLoading) ||
-                      (verification.type === 'liveness' && livenessVerification.start.isLoading)
+                      (verification.type === 'bvn' && bvnVerification.isPending) ||
+                      (verification.type === 'nin' && ninVerification.isPending) ||
+                      (verification.type === 'liveness' && livenessVerification.start.isPending)
                     }
                     isVerified={verificationStatus[verification.type]}
                     onVerify={verification.type === 'liveness' ? handleLivenessVerification : handleVerification}
@@ -337,12 +337,12 @@ const DynamicIndividualSignUp = ({ onBack }) => {
                   </button>
                   <button
                     type="submit"
-                    disabled={individualOnboardingMutation.isLoading}
+                    disabled={individualOnboardingMutation.isPending}
                     className={`flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-600/20 transition-all duration-200 ${
-                      individualOnboardingMutation.isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                      individualOnboardingMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
                     }`}
                   >
-                    {individualOnboardingMutation.isLoading ? (
+                    {individualOnboardingMutation.isPending ? (
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         <span>Creating account...</span>

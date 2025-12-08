@@ -21,7 +21,8 @@ const ProfileWorking = () => {
     verifications,
     profile,
     code,
-    isLoading,
+    email,
+    isPending,
   } = useProfileData();
 
   console.log('Profile component data:', { 
@@ -30,7 +31,7 @@ const ProfileWorking = () => {
     customerType, 
     kycStatus, 
     profile: profile?.data,
-    isLoading,
+    isPending,
     code
   });
 
@@ -49,7 +50,7 @@ const ProfileWorking = () => {
     return '₦0.00';
   };
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="flex items-center justify-center min-h-96">
         <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
@@ -113,7 +114,7 @@ const ProfileWorking = () => {
   const displayName = isBusinessCustomer 
     ? (profileData?.businessName || 'Business Account')
     : `${userFirstName} ${lastName || profileData?.lastName || ''}`.trim();
-  const displayEmail = profileData?.email || 'No email';
+  const displayEmail = email || 'No email';
   const displayBalance = walletBalance || profileData?.walletBalance;
   const displayKycStatus = kycStatus || profileData?.kycStatus || 'Unknown';
   const displayPhone = profileData?.phoneNumber || 'No phone';

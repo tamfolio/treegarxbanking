@@ -335,7 +335,7 @@ const BulkTransferForm = ({
     }
   };
 
-  const isLoading = bulkPayoutMutation.isLoading;
+  const isLoading = bulkPayoutMutation.isPending;
 
   return (
     <div className="space-y-6">

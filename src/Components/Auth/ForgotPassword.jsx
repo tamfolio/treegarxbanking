@@ -190,12 +190,12 @@ const ForgotPassword = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={forgotPasswordMutation.isLoading}
+              disabled={forgotPasswordMutation.isPending}
               className={`w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-600/20 transition-all duration-200 ${
-                forgotPasswordMutation.isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                forgotPasswordMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
               }`}
             >
-              {forgotPasswordMutation.isLoading ? (
+              {forgotPasswordMutation.isPending ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>Sending...</span>

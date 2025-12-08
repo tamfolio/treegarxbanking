@@ -18,7 +18,7 @@ const DynamicCorporateSignUp = ({ onBack }) => {
   // Fetch dynamic requirements for Business
   const { 
     data: requirementsData, 
-    isLoading: requirementsLoading, 
+    isPending: requirementsLoading, 
     error: requirementsError 
   } = useOnboardingRequirements('Business');
   
@@ -426,10 +426,10 @@ const DynamicCorporateSignUp = ({ onBack }) => {
                     onChange={handleInputChange}
                     error={errors[verification.type]}
                     isVerifying={
-                      (verification.type === 'bvn' && bvnVerification.isLoading) ||
-                      (verification.type === 'nin' && ninVerification.isLoading) ||
-                      (verification.type === 'rc_number' && rcVerification.isLoading) ||
-                      (verification.type === 'liveness' && livenessVerification.start.isLoading)
+                      (verification.type === 'bvn' && bvnVerification.isPending) ||
+                      (verification.type === 'nin' && ninVerification.isPending) ||
+                      (verification.type === 'rc_number' && rcVerification.isPending) ||
+                      (verification.type === 'liveness' && livenessVerification.start.isPending)
                     }
                     isVerified={verificationStatus[verification.type]}
                     onVerify={verification.type === 'liveness' ? handleLivenessVerification : handleVerification}
@@ -473,12 +473,12 @@ const DynamicCorporateSignUp = ({ onBack }) => {
                   </button>
                   <button
                     type="submit"
-                    disabled={businessOnboardingMutation.isLoading}
+                    disabled={businessOnboardingMutation.isPending}
                     className={`flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl shadow-lg shadow-green-600/25 hover:shadow-xl hover:shadow-green-600/30 hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-green-600/20 transition-all duration-200 ${
-                      businessOnboardingMutation.isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                      businessOnboardingMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''
                     }`}
                   >
-                    {businessOnboardingMutation.isLoading ? (
+                    {businessOnboardingMutation.isPending ? (
                       <div className="flex items-center justify-center space-x-2">
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         <span>Creating account...</span>
