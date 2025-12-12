@@ -1,21 +1,18 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   CheckCircleIcon,
   PlusIcon,
   TrashIcon,
   UserGroupIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 import {
   useBanks,
   useResolveAccount,
   useBulkPayout,
-} from '../../hooks/useTransactions';
+} from "../../hooks/useTransactions";
+import { toast } from "react-hot-toast";
 
-const BulkTransferForm = ({
-  bulkGroup = null,
-  onSuccess,
-  onClose,
-}) => {
+const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
   const [bulkItems, setBulkItems] = useState([]);
   const [groupKey, setGroupKey] = useState("");
   const [errors, setErrors] = useState({});
@@ -326,11 +323,16 @@ const BulkTransferForm = ({
 
       const result = await bulkPayoutMutation.mutateAsync(bulkData);
       if (result.success) {
+        toast.success(
+          `Bulk transfer completed! ${bulkItems.length} recipients processed.`
+        );
         onSuccess(result.data);
       } else {
+        toast.error(result.message || "Bulk transfer failed");
         setErrors({ submit: result.message || "Bulk payout failed" });
       }
     } catch (error) {
+      toast.error(error.message || "Failed to process bulk transfer");
       setErrors({ submit: error.message || "Failed to process bulk transfer" });
     }
   };
@@ -489,7 +491,10 @@ const BulkTransferForm = ({
                           type="text"
                           value={item.accountNumber}
                           onChange={(e) =>
-                            handleBulkAccountNumberChange(item.id, e.target.value)
+                            handleBulkAccountNumberChange(
+                              item.id,
+                              e.target.value
+                            )
                           }
                           placeholder="Enter account number"
                           maxLength="10"
@@ -510,7 +515,9 @@ const BulkTransferForm = ({
                       {item.resolvedAccount && (
                         <p className="text-xs text-green-600 mt-1 flex items-center space-x-1">
                           <CheckCircleIcon className="w-2 h-2" />
-                          <span>Verified: {item.resolvedAccount.accountName}</span>
+                          <span>
+                            Verified: {item.resolvedAccount.accountName}
+                          </span>
                         </p>
                       )}
 
@@ -530,7 +537,11 @@ const BulkTransferForm = ({
                         type="text"
                         value={item.beneficiaryName}
                         onChange={(e) =>
-                          updateBulkItem(item.id, "beneficiaryName", e.target.value)
+                          updateBulkItem(
+                            item.id,
+                            "beneficiaryName",
+                            e.target.value
+                          )
                         }
                         placeholder="Enter beneficiary name"
                         readOnly={item.resolved || item.resolvedAccount}
@@ -551,7 +562,11 @@ const BulkTransferForm = ({
                           type="text"
                           value={item.displayAmount}
                           onChange={(e) =>
-                            updateBulkItem(item.id, "displayAmount", e.target.value)
+                            updateBulkItem(
+                              item.id,
+                              "displayAmount",
+                              e.target.value
+                            )
                           }
                           placeholder="0.00"
                           className="w-full pl-6 pr-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
@@ -605,7 +620,9 @@ const BulkTransferForm = ({
                       >
                         <span
                           className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-lg transition-transform ${
-                            item.saveBeneficiary ? "translate-x-5" : "translate-x-1"
+                            item.saveBeneficiary
+                              ? "translate-x-5"
+                              : "translate-x-1"
                           }`}
                         />
                       </button>
@@ -616,9 +633,7 @@ const BulkTransferForm = ({
             })}
           </div>
 
-          {errors.bulk && (
-            <p className="text-sm text-red-600">{errors.bulk}</p>
-          )}
+          {errors.bulk && <p className="text-sm text-red-600">{errors.bulk}</p>}
 
           {/* Submit Error */}
           {errors.submit && (

@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   CheckCircleIcon,
   MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 import {
   useBanks,
   useResolveAccount,
   usePayout,
-} from '../../hooks/useTransactions';
+} from "../../hooks/useTransactions";
+import { toast } from "react-hot-toast";
 
 const SingleTransferForm = ({
   prefilledData = {},
@@ -96,8 +97,8 @@ const SingleTransferForm = ({
   // Handle selected beneficiary
   useEffect(() => {
     if (selectedBeneficiary) {
-      const bank = banks.find(b => b.bankId === selectedBeneficiary.bankId);
-      
+      const bank = banks.find((b) => b.bankId === selectedBeneficiary.bankId);
+
       setFormData({
         bankId: selectedBeneficiary.bankId,
         accountNumber: selectedBeneficiary.accountNumber,
@@ -128,8 +129,8 @@ const SingleTransferForm = ({
       if (bank) {
         setSelectedBank(bank);
         setBankSearchTerm(bank.bankName);
-        
-        setResolvedAccount(prev => 
+
+        setResolvedAccount((prev) =>
           prev ? { ...prev, bankName: bank.bankName } : null
         );
       }
@@ -268,11 +269,14 @@ const SingleTransferForm = ({
     try {
       const result = await payoutMutation.mutateAsync(formData);
       if (result.success) {
+        toast.success("Transfer completed successfully!");
         onSuccess(result.data);
       } else {
+        toast.error(result.message || "Transfer failed");
         setErrors({ submit: result.message || "Payout failed" });
       }
     } catch (error) {
+      toast.error(error.message || "Failed to process transfer");
       setErrors({ submit: error.message || "Failed to process transfer" });
     }
   };
@@ -322,11 +326,6 @@ const SingleTransferForm = ({
                   <div className="text-sm font-medium text-slate-800">
                     {bank.bankName}
                   </div>
-                  {bank.providerBankCode && (
-                    <div className="text-xs text-slate-500">
-                      Code: {bank.providerBankCode}
-                    </div>
-                  )}
                 </button>
               ))
             ) : (
@@ -346,17 +345,8 @@ const SingleTransferForm = ({
           ></div>
         )}
 
-        {selectedBank && (
-          <p className="text-green-600 text-xs mt-1 flex items-center space-x-1">
-            <CheckCircleIcon className="w-3 h-3" />
-            <span>{selectedBank.bankName} selected</span>
-          </p>
-        )}
-
         {errors.bankId && (
-          <p className="mt-1 text-xs text-red-600">
-            {errors.bankId}
-          </p>
+          <p className="mt-1 text-xs text-red-600">{errors.bankId}</p>
         )}
       </div>
 
@@ -374,9 +364,7 @@ const SingleTransferForm = ({
             placeholder="Enter 10-digit account number"
             maxLength="10"
             className={`w-full px-3 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
-              errors.accountNumber
-                ? "border-red-300"
-                : "border-slate-200"
+              errors.accountNumber ? "border-red-300" : "border-slate-200"
             }`}
           />
           {formData.accountNumber && formData.bankId && (
@@ -404,9 +392,7 @@ const SingleTransferForm = ({
         )}
 
         {errors.accountNumber && (
-          <p className="mt-1 text-xs text-red-600">
-            {errors.accountNumber}
-          </p>
+          <p className="mt-1 text-xs text-red-600">{errors.accountNumber}</p>
         )}
       </div>
 
@@ -434,15 +420,11 @@ const SingleTransferForm = ({
         {formData.amount > 0 && (
           <p className="mt-1 text-xs text-slate-500">
             Amount: ₦
-            {parseAmount(
-              formData.displayAmount || "0"
-            ).toLocaleString()}
+            {parseAmount(formData.displayAmount || "0").toLocaleString()}
           </p>
         )}
         {errors.amount && (
-          <p className="mt-1 text-xs text-red-600">
-            {errors.amount}
-          </p>
+          <p className="mt-1 text-xs text-red-600">{errors.amount}</p>
         )}
       </div>
 
@@ -462,9 +444,7 @@ const SingleTransferForm = ({
           }`}
         />
         {errors.narration && (
-          <p className="mt-1 text-xs text-red-600">
-            {errors.narration}
-          </p>
+          <p className="mt-1 text-xs text-red-600">{errors.narration}</p>
         )}
       </div>
 
@@ -485,16 +465,12 @@ const SingleTransferForm = ({
             }))
           }
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
-            formData.saveBeneficiary
-              ? "bg-blue-600"
-              : "bg-slate-200"
+            formData.saveBeneficiary ? "bg-blue-600" : "bg-slate-200"
           }`}
         >
           <span
             className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
-              formData.saveBeneficiary
-                ? "translate-x-6"
-                : "translate-x-1"
+              formData.saveBeneficiary ? "translate-x-6" : "translate-x-1"
             }`}
           />
         </button>

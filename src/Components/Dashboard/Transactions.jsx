@@ -5,14 +5,19 @@ import {
   PaperAirplaneIcon,
   MagnifyingGlassIcon,
   CalendarDaysIcon,
-  XMarkIcon
+  XMarkIcon,
+  ReceiptRefundIcon
 } from '@heroicons/react/24/outline';
 import { useTransactions, useProducts } from '../../hooks/useTransactions';
 import PayoutModal from '../../Components/Modals/PayoutModal';
+import TransactionReceipt from './TransactionReceipt';
 
 const Transactions = () => {
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
+  
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -59,6 +64,11 @@ const Transactions = () => {
 
   const handlePageChange = (newPage) => {
     setFilters(prev => ({ ...prev, pageNumber: newPage }));
+  };
+
+  const handleViewReceipt = (transaction) => {
+    setSelectedTransaction(transaction);
+    setShowReceipt(true);
   };
 
   const getStatusBadge = (status) => {
@@ -240,7 +250,7 @@ const Transactions = () => {
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 >
                   <option value="">All Statuses</option>
-                  <option value="Successful">Successful</option>
+                  <option value="Success">Success</option>
                   <option value="Failed">Failed</option>
                   <option value="Pending">Pending</option>
                   <option value="Processing">Processing</option>
@@ -353,6 +363,9 @@ const Transactions = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                         Reference
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
@@ -404,6 +417,15 @@ const Transactions = () => {
                             </div>
                           )}
                         </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleViewReceipt(transaction)}
+                            className="inline-flex items-center space-x-1 px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                          >
+                            <ReceiptRefundIcon className="w-3 h-3" />
+                            <span>Receipt</span>
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -442,7 +464,16 @@ const Transactions = () => {
                           <div className="text-xs text-slate-500">
                             {formatDate(transaction.createdAt)}
                           </div>
-                          {getStatusBadge(transaction.status)}
+                          <div className="flex items-center space-x-2">
+                            {getStatusBadge(transaction.status)}
+                            <button
+                              onClick={() => handleViewReceipt(transaction)}
+                              className="inline-flex items-center space-x-1 px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                            >
+                              <ReceiptRefundIcon className="w-3 h-3" />
+                              <span>Receipt</span>
+                            </button>
+                          </div>
                         </div>
                         
                         <div className="mt-2 text-xs font-mono text-slate-400">
@@ -493,6 +524,13 @@ const Transactions = () => {
           refetchTransactions();
           // You can add a toast notification here
         }}
+      />
+
+      {/* Transaction Receipt Modal */}
+      <TransactionReceipt
+        transaction={selectedTransaction}
+        isOpen={showReceipt}
+        onClose={() => setShowReceipt(false)}
       />
     </div>
   );

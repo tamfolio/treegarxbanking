@@ -8,6 +8,7 @@ import {
   useResolveCustomer,
   useTagPay,
 } from '../../hooks/useTransactions';
+import { toast } from 'react-hot-toast';
 
 const TagPayForm = ({
   onSuccess,
@@ -148,23 +149,26 @@ const TagPayForm = ({
   // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!validateForm()) return;
-
+  
     try {
       const payloadData = {
         amount: formData.amount,
         narration: formData.narration,
         destinationTagOrCode: formData.destinationTag,
       };
-
+  
       const result = await tagPayMutation.mutateAsync(payloadData);
       if (result.success) {
+        toast.success(`Tag Pay completed! Sent ₦${formData.amount.toLocaleString()} to ${resolvedCustomer.name}`);
         onSuccess(result.data);
       } else {
+        toast.error(result.message || "Tag Pay failed");
         setErrors({ submit: result.message || "Tag Pay failed" });
       }
     } catch (error) {
+      toast.error(error.message || "Failed to process Tag Pay");
       setErrors({ submit: error.message || "Failed to process Tag Pay" });
     }
   };
@@ -190,14 +194,14 @@ const TagPayForm = ({
             value={formData.destinationTag}
             onChange={handleTagChange}
             placeholder="tg-abc123 or customer tag"
-            className={`w-full pl-9 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all ${
+            className={`w-full pl-9 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
               errors.destinationTag ? "border-red-300" : "border-slate-200"
             }`}
           />
           {formData.destinationTag && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               {isResolving ? (
-                <div className="animate-spin h-4 w-4 border-2 border-orange-600 border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
               ) : resolvedCustomer ? (
                 <CheckCircleIcon className="w-4 h-4 text-green-600" />
               ) : null}
@@ -222,7 +226,7 @@ const TagPayForm = ({
         )}
 
         {isResolving && (
-          <p className="text-xs text-orange-600 mt-1">
+          <p className="text-xs text-blue-600 mt-1">
             🔄 Resolving customer tag...
           </p>
         )}
@@ -249,7 +253,7 @@ const TagPayForm = ({
             value={formData.displayAmount || ""}
             onChange={handleAmountChange}
             placeholder="0.00"
-            className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all ${
+            className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
               errors.amount ? "border-red-300" : "border-slate-200"
             }`}
             style={{ paddingLeft: "2.25rem" }}
@@ -281,7 +285,7 @@ const TagPayForm = ({
           value={formData.narration || ""}
           onChange={handleInputChange}
           placeholder="What's this payment for?"
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-600 transition-all ${
+          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
             errors.narration ? "border-red-300" : "border-slate-200"
           }`}
         />
@@ -338,7 +342,7 @@ const TagPayForm = ({
         <button
           type="submit"
           disabled={isLoading || !resolvedCustomer}
-          className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-400 text-white rounded-lg transition-colors"
+          className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white rounded-lg transition-colors"
         >
           {isLoading ? "Processing..." : "Send Money"}
         </button>
