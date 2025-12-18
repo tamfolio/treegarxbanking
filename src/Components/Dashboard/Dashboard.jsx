@@ -37,13 +37,18 @@ const Dashboard = () => {
     firstName,
     lastName,
     customerType,
+    customerTypeCode,
+    businessName,
     isLoading: profileLoading,
     profile,
   } = useProfileData();
 
   // Fallback to localStorage if profile is still loading
   const fallbackUserData = JSON.parse(localStorage.getItem("userData") || "{}");
-  const userFirstName = firstName || fallbackUserData.firstName || "User";
+  const userFirstName =
+    customerTypeCode === "Business"
+      ? businessName || fallbackUserData.businessName || "Business"
+      : firstName || fallbackUserData.firstName || "User";
   const userType = customerType || "Personal";
 
   const navigation = [
@@ -133,7 +138,11 @@ const Dashboard = () => {
           {/* Logo and close button */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
             <div className="flex items-center space-x-1">
-                <img src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766038036/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw.png" alt="" className="w-[100px] h-[80px]"/>
+              <img
+                src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766038036/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw.png"
+                alt=""
+                className="w-[100px] h-[80px]"
+              />
               <div>
                 <div className="text-md font-semibold text-slate-900">
                   Nexus

@@ -29,6 +29,7 @@ import ProtectedRoute from "./Components/Common/ProtectedRoute";
 import Transactions from './Components/Dashboard/Transactions'
 import Beneficiaries from "./Components/Dashboard/Beneficiaries";
 import Profile from "./Components/Dashboard/Profile";
+import EmailVerification from "./Components/Auth/EmailVerification";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<SignUp />} />
+          <Route path="/email-verification" element={<EmailVerification />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/resetpassword" element={<ResetPassword />} />
 

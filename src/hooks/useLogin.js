@@ -48,6 +48,24 @@ export const useLogin = () => {
       if (data.success) {
         const userData = data.data;
         
+        // Check if email verification is required
+        if (data.message && data.message.includes('Email verification required')) {
+          // Store just the email for verification page
+          const emailVerificationData = {
+            email: userData.email,
+            expiresAt: userData.expiresAt,
+            nextSendAt: userData.nextSendAt
+          };
+          localStorage.setItem('tempEmailVerificationData', JSON.stringify(emailVerificationData));
+          
+          navigate('/email-verification', { 
+            state: emailVerificationData
+          });
+          
+          toast.success('OTP sent to your email for verification');
+          return;
+        }
+        
         // Check if 2FA is required
         if (userData.requiresTwoFactor) {
           // Store temporary data for OTP verification
