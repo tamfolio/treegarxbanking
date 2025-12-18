@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   XMarkIcon, 
   CalendarIcon, 
-  ArrowDownTrayIcon,
+  PaperAirplaneIcon,
   DocumentArrowDownIcon 
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
@@ -17,9 +17,7 @@ const StatementDownloadModal = ({ isOpen, onClose, onDownloadStart, onDownloadCo
     direction: '',
     status: '',
     pageNumber: 1,
-    pageSize: 100,
-    export: 'pdf', // Default to PDF
-    email: ''
+    pageSize: 100
   });
   
   const [isDownloading, setIsDownloading] = useState(false);
@@ -36,9 +34,7 @@ const StatementDownloadModal = ({ isOpen, onClose, onDownloadStart, onDownloadCo
         direction: '',
         status: '',
         pageNumber: 1,
-        pageSize: 100,
-        export: 'pdf',
-        email: ''
+        pageSize: 100
       });
       setErrors({});
       setIsDownloading(false);
@@ -99,14 +95,6 @@ const StatementDownloadModal = ({ isOpen, onClose, onDownloadStart, onDownloadCo
       }
     }
 
-    if (formData.export === 'email' && !formData.email) {
-      newErrors.email = 'Email is required when sending via email';
-    }
-
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -125,7 +113,12 @@ const StatementDownloadModal = ({ isOpen, onClose, onDownloadStart, onDownloadCo
       const result = await statementService.sendStatementToEmail({
         startDate: formData.startDate,
         endDate: formData.endDate,
-        export: formData.export || 'pdf',
+        export: 'pdf', // Always PDF format via email
+        type: formData.type,
+        direction: formData.direction,
+        status: formData.status,
+        pageNumber: formData.pageNumber,
+        pageSize: formData.pageSize
       });
   
       if (result.success) {
@@ -169,8 +162,8 @@ const StatementDownloadModal = ({ isOpen, onClose, onDownloadStart, onDownloadCo
                 <DocumentArrowDownIcon className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-800">Download Statement</h2>
-                <p className="text-sm text-slate-500">Generate your account statement</p>
+                <h2 className="text-xl font-bold text-slate-800">Email Statement</h2>
+                <p className="text-sm text-slate-500">Send your account statement to email</p>
               </div>
             </div>
             <button
@@ -262,61 +255,34 @@ const StatementDownloadModal = ({ isOpen, onClose, onDownloadStart, onDownloadCo
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="Successful">Successful</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Failed">Failed</option>
-                  <option value="Processing">Processing</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Export Format
-                </label>
-                <select
-                  name="export"
-                  value={formData.export}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                >
-                  <option value="pdf">PDF</option>
-                  <option value="excel">Excel</option>
-                  <option value="email">Email to me</option>
-                </select>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Status
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+              >
+                <option value="">All Statuses</option>
+                <option value="Successful">Successful</option>
+                <option value="Pending">Pending</option>
+                <option value="Failed">Failed</option>
+                <option value="Processing">Processing</option>
+              </select>
             </div>
 
-            {/* Email field - only show when export is email */}
-            {formData.export === 'email' && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Enter your email address"
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
-                    errors.email ? 'border-red-300' : 'border-slate-200'
-                  }`}
-                />
-                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+            {/* Info Notice */}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <PaperAirplaneIcon className="w-4 h-4 text-blue-600 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium">Email Delivery</p>
+                  <p className="mt-1">Your statement will be sent as a PDF to your registered email address.</p>
+                </div>
               </div>
-            )}
+            </div>
 
             {/* Submit Error */}
             {errors.submit && (
@@ -343,14 +309,12 @@ const StatementDownloadModal = ({ isOpen, onClose, onDownloadStart, onDownloadCo
                 {isDownloading ? (
                   <>
                     <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    <span>Downloading...</span>
+                    <span>Sending...</span>
                   </>
                 ) : (
                   <>
-                    <ArrowDownTrayIcon className="w-4 h-4" />
-                    <span>
-                      {formData.export === 'email' ? 'Send Email' : 'Download'}
-                    </span>
+                    <PaperAirplaneIcon className="w-4 h-4" />
+                    <span>Send to Email</span>
                   </>
                 )}
               </button>

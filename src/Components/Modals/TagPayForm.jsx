@@ -1,20 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   CheckCircleIcon,
   HashtagIcon,
   UserIcon,
-} from '@heroicons/react/24/outline';
-import {
-  useResolveCustomer,
-  useTagPay,
-} from '../../hooks/useTransactions';
-import { toast } from 'react-hot-toast';
+} from "@heroicons/react/24/outline";
+import { useResolveCustomer, useTagPay } from "../../hooks/useTransactions";
+import { toast } from "react-hot-toast";
 import PinVerificationModal from "../Modals/PinVerificationModal";
 
-const TagPayForm = ({
-  onSuccess,
-  onClose,
-}) => {
+const TagPayForm = ({ onSuccess, onClose }) => {
   const [errors, setErrors] = useState({});
   const [isResolving, setIsResolving] = useState(false);
   const [resolvedCustomer, setResolvedCustomer] = useState(null);
@@ -56,20 +50,20 @@ const TagPayForm = ({
 
       if (result.success) {
         setResolvedCustomer(result.data);
-        setErrors(prev => ({ ...prev, destinationTag: "" }));
+        setErrors((prev) => ({ ...prev, destinationTag: "" }));
       } else {
         setResolvedCustomer(null);
-        setErrors(prev => ({ 
-          ...prev, 
-          destinationTag: result.message || "Customer tag not found" 
+        setErrors((prev) => ({
+          ...prev,
+          destinationTag: result.message || "Customer tag not found",
         }));
       }
     } catch (error) {
       console.error("Customer resolution failed:", error);
       setResolvedCustomer(null);
-      setErrors(prev => ({ 
-        ...prev, 
-        destinationTag: error.message || "Failed to resolve customer tag" 
+      setErrors((prev) => ({
+        ...prev,
+        destinationTag: error.message || "Failed to resolve customer tag",
       }));
     } finally {
       setIsResolving(false);
@@ -99,7 +93,7 @@ const TagPayForm = ({
       destinationTag: value,
     }));
     setResolvedCustomer(null);
-    
+
     // Clear tag error when user starts typing
     if (errors.destinationTag) {
       setErrors((prev) => ({ ...prev, destinationTag: "" }));
@@ -136,12 +130,11 @@ const TagPayForm = ({
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.destinationTag) 
+    if (!formData.destinationTag)
       newErrors.destinationTag = "Customer tag is required";
     if (!formData.amount || formData.amount <= 0)
       newErrors.amount = "Amount must be greater than 0";
-    if (!formData.narration) 
-      newErrors.narration = "Narration is required";
+    if (!formData.narration) newErrors.narration = "Narration is required";
     if (!resolvedCustomer)
       newErrors.destinationTag = "Please resolve customer tag first";
 
@@ -152,14 +145,19 @@ const TagPayForm = ({
   // Form submission - now shows PIN modal instead of direct submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!validateForm()) return;
-  
+
     // Store transaction data and show PIN modal
     const payloadData = {
       amount: formData.amount,
       narration: formData.narration,
       destinationTagOrCode: formData.destinationTag,
+      bankName: "Tag Pay", // Add this for consistency
+      recipientName:
+        resolvedCustomer?.name ||
+        resolvedCustomer?.fullName ||
+        "Tag Pay Customer", // Add this
     };
 
     setPendingTransactionData(payloadData);
@@ -171,12 +169,16 @@ const TagPayForm = ({
     try {
       const payloadData = {
         ...transactionData,
-        pin: pin
+        pin: pin,
       };
 
       const result = await tagPayMutation.mutateAsync(payloadData);
       if (result.success) {
-        toast.success(`Tag Pay completed! Sent ₦${formData.amount.toLocaleString()} to ${resolvedCustomer.name || resolvedCustomer.fullName}`);
+        toast.success(
+          `Tag Pay completed! Sent ₦${formData.amount.toLocaleString()} to ${
+            resolvedCustomer.name || resolvedCustomer.fullName
+          }`
+        );
         onSuccess(result.data);
       } else {
         toast.error(result.message || "Tag Pay failed");
@@ -185,7 +187,7 @@ const TagPayForm = ({
     } catch (error) {
       toast.error(error.message || "Failed to process Tag Pay");
       setErrors({ submit: error.message || "Failed to process Tag Pay" });
-      
+
       // Re-throw error to be handled by the PIN modal
       throw error;
     }
@@ -231,10 +233,15 @@ const TagPayForm = ({
                 <UserIcon className="w-4 h-4 text-green-600" />
                 <div>
                   <p className="text-sm font-medium text-green-800">
-                    {resolvedCustomer.name || resolvedCustomer.fullName || 'Customer Found'}
+                    {resolvedCustomer.name ||
+                      resolvedCustomer.fullName ||
+                      "Customer Found"}
                   </p>
                   <p className="text-xs text-green-600">
-                    Tag: {resolvedCustomer.customerTag || resolvedCustomer.tag || formData.destinationTag}
+                    Tag:{" "}
+                    {resolvedCustomer.customerTag ||
+                      resolvedCustomer.tag ||
+                      formData.destinationTag}
                   </p>
                 </div>
               </div>
@@ -248,9 +255,7 @@ const TagPayForm = ({
           )}
 
           {errors.destinationTag && (
-            <p className="mt-1 text-xs text-red-600">
-              {errors.destinationTag}
-            </p>
+            <p className="mt-1 text-xs text-red-600">{errors.destinationTag}</p>
           )}
         </div>
 
@@ -278,15 +283,11 @@ const TagPayForm = ({
           {formData.amount > 0 && (
             <p className="mt-1 text-xs text-slate-500">
               Amount: ₦
-              {parseAmount(
-                formData.displayAmount || "0"
-              ).toLocaleString()}
+              {parseAmount(formData.displayAmount || "0").toLocaleString()}
             </p>
           )}
           {errors.amount && (
-            <p className="mt-1 text-xs text-red-600">
-              {errors.amount}
-            </p>
+            <p className="mt-1 text-xs text-red-600">{errors.amount}</p>
           )}
         </div>
 
@@ -306,16 +307,16 @@ const TagPayForm = ({
             }`}
           />
           {errors.narration && (
-            <p className="mt-1 text-xs text-red-600">
-              {errors.narration}
-            </p>
+            <p className="mt-1 text-xs text-red-600">{errors.narration}</p>
           )}
         </div>
 
         {/* Transfer Info */}
         {resolvedCustomer && formData.amount > 0 && (
           <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <h4 className="font-medium text-slate-800 mb-2">Transfer Summary</h4>
+            <h4 className="font-medium text-slate-800 mb-2">
+              Transfer Summary
+            </h4>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-600">To:</span>
@@ -326,7 +327,9 @@ const TagPayForm = ({
               <div className="flex justify-between">
                 <span className="text-slate-600">Tag:</span>
                 <span className="font-mono text-slate-800">
-                  {resolvedCustomer.customerTag || resolvedCustomer.tag || formData.destinationTag}
+                  {resolvedCustomer.customerTag ||
+                    resolvedCustomer.tag ||
+                    formData.destinationTag}
                 </span>
               </div>
               <div className="flex justify-between">

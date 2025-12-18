@@ -117,8 +117,10 @@ const ProfileWorking = () => {
   const displayEmail = email || 'No email';
   const displayBalance = walletBalance || profileData?.walletBalance;
   const displayKycStatus = kycStatus || profileData?.kycStatus || 'Unknown';
-  const displayPhone = profileData?.phoneNumber || 'No phone';
+  const displayPhone = profileData?.customer?.phoneNumber || profileData?.phoneNumber || 'No phone';
   const displayCode = code || profileData?.code || 'No code'; // Use hook code first, then fallback
+
+  console.log("Test",profileData?.customer?.phoneNumber)
 
   console.log('Customer codes debug:', {
     hookCode: code,
@@ -197,8 +199,8 @@ const ProfileWorking = () => {
           {/* Basic Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
             <div>
-              <p className="text-sm text-gray-600">Customer Code</p>
-              <p className="font-medium text-gray-900">{displayCode}</p>
+              <p className="text-sm text-gray-600">Customer Name</p>
+              <p className="font-medium text-gray-900">{firstName + ' ' + lastName}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Phone Number</p>

@@ -179,7 +179,7 @@ const SingleTransferForm = ({
     try {
       const result = await resolveAccountMutation.mutateAsync({
         bankId: formData.bankId,
-        accountNumber: formData.accountNumber,
+        accountNumber: formData.accountNumber
       });
 
       if (result.success) {
@@ -266,13 +266,14 @@ const SingleTransferForm = ({
   // Form submission - now shows PIN modal instead of direct submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!validateForm()) return;
-
+  
     // Store transaction data and show PIN modal
     setPendingTransactionData({
       ...formData,
-      beneficiaryName: resolvedAccount.accountName
+      beneficiaryName: resolvedAccount.accountName,
+      bankName: selectedBank?.bankName || 'Unknown Bank'  // Add this line
     });
     setShowPinModal(true);
   };

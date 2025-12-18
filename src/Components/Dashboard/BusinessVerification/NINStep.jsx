@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const NINVerificationStep = ({ 
@@ -11,6 +11,35 @@ const NINVerificationStep = ({
   const [showNIN, setShowNIN] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Clear any autofilled values on component mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNin('');
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handle input changes with additional cleaning
+  const handleNinChange = (e) => {
+    let value = e.target.value;
+    
+    // Remove any non-numeric characters
+    value = value.replace(/\D/g, '');
+    
+    // Limit to 11 digits
+    if (value.length > 11) {
+      value = value.slice(0, 11);
+    }
+    
+    setNin(value);
+    
+    // Clear errors when user types
+    if (errors.nin) {
+      setErrors(prev => ({ ...prev, nin: '' }));
+    }
+  };
 
   const validateNIN = () => {
     if (!/^\d{11}$/.test(nin)) {
@@ -52,6 +81,14 @@ const NINVerificationStep = ({
     }
   };
 
+  const handleFocus = (e) => {
+    // Clear the field when focused to prevent autofilled values
+    if (e.target.value && !nin) {
+      e.target.value = '';
+      setNin('');
+    }
+  };
+
   return (
     <div className="space-y-4 bg-white p-6 rounded-lg border shadow-sm">
       <div className="text-center">
@@ -68,12 +105,37 @@ const NINVerificationStep = ({
           Business Owner's NIN *
         </label>
         <div className="relative">
+          {/* Hidden dummy input to fool password managers */}
+          <input
+            type="password"
+            tabIndex={-1}
+            style={{
+              position: 'absolute',
+              left: '-9999px',
+              opacity: 0,
+              pointerEvents: 'none'
+            }}
+            aria-hidden="true"
+          />
+          
           <input
             type={showNIN ? "text" : "password"}
             maxLength={11}
             value={nin}
-            onChange={(e) => setNin(e.target.value)}
+            onChange={handleNinChange}
+            onFocus={handleFocus}
             placeholder="Enter 11-digit NIN"
+            autoComplete="new-password"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            name="nin-verification-field"
+            id="nin-verification-field"
+            data-form-type="other"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            inputMode="numeric"
+            pattern="[0-9]*"
             className={`w-full border px-3 py-2 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 ${
               errors.nin ? 'border-red-300' : 'border-gray-200'
             }`}

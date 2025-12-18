@@ -5,12 +5,14 @@ const PinVerificationModal = ({
   isOpen, 
   onClose, 
   onSuccess, 
-  transactionData = null,
+  transactionData,
   transactionType = "transfer" // "transfer", "tagpay", "bulk"
 }) => {
   const [pinDigits, setPinDigits] = useState(['', '', '', '']);
   const [errors, setErrors] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
+
+  console.log("transactionData", transactionData)
   
   // Refs for input focus management
   const pinRefs = useRef([]);
@@ -136,19 +138,23 @@ const PinVerificationModal = ({
         return {
           title: 'Tag Pay Transfer',
           recipient: transactionData.destinationTagOrCode,
-          amount: transactionData.amount
+          amount: transactionData.amount,
+          bank: transactionData.bankName || 'Tag Pay'
         };
       case 'bulk':
         return {
           title: 'Bulk Transfer',
           recipient: `${transactionData.items?.length || 0} recipients`,
-          amount: transactionData.items?.reduce((total, item) => total + item.amount, 0) || 0
+          amount: transactionData.items?.reduce((total, item) => total + item.amount, 0) || 0,
+          bank: 'Multiple Banks'
         };
       default:
         return {
           title: 'Bank Transfer',
           recipient: transactionData.beneficiaryName || transactionData.accountNumber,
-          amount: transactionData.amount
+          amount: transactionData.amount,
+          bank: transactionData.bankName || 'Unknown Bank',
+          accountNumber: transactionData.accountNumber
         };
     }
   };
@@ -189,19 +195,37 @@ const PinVerificationModal = ({
             {/* Transaction Summary */}
             {transactionSummary && (
               <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">
+                <h3 className="text-sm font-semibold text-slate-700 mb-3">
                   {transactionSummary.title}
                 </h3>
-                <div className="space-y-1 text-sm">
+                <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-600">To:</span>
+                    <span className="text-slate-600">Recipient:</span>
                     <span className="font-medium text-slate-800">
                       {transactionSummary.recipient}
                     </span>
                   </div>
+                  
+                  {/* Show account number for regular transfers */}
+                  {transactionSummary.accountNumber && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Account:</span>
+                      <span className="font-medium text-slate-800">
+                        {transactionSummary.accountNumber}
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between">
-                    <span className="text-slate-600">Amount:</span>
-                    <span className="font-bold text-slate-800">
+                    <span className="text-slate-600">Bank:</span>
+                    <span className="font-medium text-slate-800">
+                      {transactionData.bankName}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between pt-2 border-t border-slate-200">
+                    <span className="text-slate-600 font-medium">Amount:</span>
+                    <span className="font-bold text-slate-800 text-lg">
                       ₦{transactionSummary.amount?.toLocaleString() || '0'}
                     </span>
                   </div>

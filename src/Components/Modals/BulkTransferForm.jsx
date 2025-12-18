@@ -306,27 +306,29 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
   };
 
   // Form submission - now shows PIN modal instead of direct submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+// Form submission - now shows PIN modal instead of direct submission
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    // Store transaction data and show PIN modal
-    const bulkData = {
-      groupKey: groupKey || `BULK-${Date.now()}`,
-      items: bulkItems.map((item) => ({
-        bankId: item.bankId,
-        amount: item.amount,
-        narration: item.narration,
-        accountNumber: item.accountNumber,
-        beneficiaryName: item.beneficiaryName,
-        saveBeneficiary: item.saveBeneficiary,
-      })),
-    };
-
-    setPendingTransactionData(bulkData);
-    setShowPinModal(true);
+  // Store transaction data and show PIN modal
+  const bulkData = {
+    groupKey: groupKey || `BULK-${Date.now()}`,
+    items: bulkItems.map((item) => ({
+      bankId: item.bankId,
+      bankName: item.bankName || item.selectedBank?.bankName || 'Unknown Bank', // Add this
+      amount: item.amount,
+      narration: item.narration,
+      accountNumber: item.accountNumber,
+      beneficiaryName: item.beneficiaryName,
+      saveBeneficiary: item.saveBeneficiary,
+    })),
   };
+
+  setPendingTransactionData(bulkData);
+  setShowPinModal(true);
+};
 
   // Handle PIN verification success
   const handlePinVerified = async ({ pin, transactionData }) => {

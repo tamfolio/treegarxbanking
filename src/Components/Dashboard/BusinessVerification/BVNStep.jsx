@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 const BVNVerificationStep = ({ 
@@ -11,6 +11,35 @@ const BVNVerificationStep = ({
   const [showBVN, setShowBVN] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Clear any autofilled values on component mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setBvn('');
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handle input changes with additional cleaning
+  const handleBvnChange = (e) => {
+    let value = e.target.value;
+    
+    // Remove any non-numeric characters
+    value = value.replace(/\D/g, '');
+    
+    // Limit to 11 digits
+    if (value.length > 11) {
+      value = value.slice(0, 11);
+    }
+    
+    setBvn(value);
+    
+    // Clear errors when user types
+    if (errors.bvn) {
+      setErrors(prev => ({ ...prev, bvn: '' }));
+    }
+  };
 
   const validateBVN = () => {
     if (!/^\d{11}$/.test(bvn)) {
@@ -52,6 +81,14 @@ const BVNVerificationStep = ({
     }
   };
 
+  const handleFocus = (e) => {
+    // Clear the field when focused to prevent autofilled values
+    if (e.target.value && !bvn) {
+      e.target.value = '';
+      setBvn('');
+    }
+  };
+
   return (
     <div className="space-y-4 bg-white p-6 rounded-lg border shadow-sm">
       <div className="text-center">
@@ -68,12 +105,37 @@ const BVNVerificationStep = ({
           Business Owner's BVN *
         </label>
         <div className="relative">
+          {/* Hidden dummy input to fool password managers */}
+          <input
+            type="password"
+            tabIndex={-1}
+            style={{
+              position: 'absolute',
+              left: '-9999px',
+              opacity: 0,
+              pointerEvents: 'none'
+            }}
+            aria-hidden="true"
+          />
+          
           <input
             type={showBVN ? "text" : "password"}
             maxLength={11}
             value={bvn}
-            onChange={(e) => setBvn(e.target.value)}
+            onChange={handleBvnChange}
+            onFocus={handleFocus}
             placeholder="Enter 11-digit BVN"
+            autoComplete="new-password"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            name="bvn-verification-field"
+            id="bvn-verification-field"
+            data-form-type="other"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            inputMode="numeric"
+            pattern="[0-9]*"
             className={`w-full border px-3 py-2 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 ${
               errors.bvn ? 'border-red-300' : 'border-gray-200'
             }`}

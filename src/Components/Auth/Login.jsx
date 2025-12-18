@@ -160,7 +160,7 @@ const Login = () => {
               Welcome back!
             </h1>
             <p className="text-slate-500 text-base">
-              Sign in to your Treegar X account
+              Sign in to your Nexus account
             </p>
           </div>
 

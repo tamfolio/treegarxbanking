@@ -251,7 +251,7 @@ const Overview = () => {
               {getTimeBasedGreeting()}, {userFirstName}
             </h1>
             <p className="text-slate-600">
-              Here is a quick view of your Treegar X accounts
+              Here is a quick view of your Nexus accounts
             </p>
           </div>
 
