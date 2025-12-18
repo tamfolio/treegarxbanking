@@ -39,7 +39,7 @@ const Overview = () => {
 
   // Check if PIN is set and show modal if not
   useEffect(() => {
-    if (profile?.data && profile.data.pinSet === false) {
+    if (profile && profile.pinSet === false) {
       setShowSetPinModal(true);
     }
   }, [profile]);
@@ -201,7 +201,7 @@ const Overview = () => {
 
   // Handler for KYC verification - routes to profile page
   const handleKYCVerification = () => {
-    window.location.href = "/profile";
+    window.location.href = "/dashboard/profile";
   };
 
   const quickActions = [
