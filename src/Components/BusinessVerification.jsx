@@ -4,6 +4,7 @@ import VerificationStepIndicator from "./Dashboard/BusinessVerification/Verifica
 import BVNVerificationStep from "./Dashboard/BusinessVerification/BVNStep";
 import NINVerificationStep from "./Dashboard/BusinessVerification/NINStep";
 import DocumentsStep from "./Dashboard/BusinessVerification/DocumentUploadStep";
+import { useRefreshProfile } from "../hooks/useProfile";
 
 const BusinessVerification = ({
   customerId,
@@ -13,6 +14,24 @@ const BusinessVerification = ({
   onVerificationSuccess,
   onDocumentUploadSuccess,
 }) => {
+  const { refreshProfile } = useRefreshProfile();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleProfileRefresh = async () => {
+    if (isRefreshing) return;
+
+    setIsRefreshing(true);
+    try {
+      console.log("Refreshing profile data...");
+      const result = await refreshProfile();
+      console.log("Profile refreshed successfully:", result);
+      return result;
+    } catch (error) {
+      console.error("Failed to refresh profile:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   /* ------------------ VERIFICATION HELPERS ------------------ */
   const getVerification = (type) =>
     verifications.find((v) => v.type === type) || {};
@@ -88,16 +107,28 @@ const BusinessVerification = ({
   console.log("canAccessDocuments:", canAccessDocuments);
 
   /* ------------------ EVENT HANDLERS ------------------ */
-  const handleVerificationSuccess = (type, result) => {
+  const handleVerificationSuccess = async (type, result) => {
     console.log(`${type} verification successful:`, result);
     onVerificationSuccess(type, result);
     setErrors({});
+
+    // ADD THIS - refresh after verification
+    setTimeout(async () => {
+      console.log(`Refreshing profile after ${type} verification...`);
+      await handleProfileRefresh();
+    }, 2000);
   };
 
-  const handleDocumentSuccess = (documentKey, result) => {
+  const handleDocumentSuccess = async (documentKey, result) => {
     console.log(`Document ${documentKey} uploaded successfully:`, result);
     onDocumentUploadSuccess(documentKey, result);
     setErrors({});
+
+    // ADD THIS - refresh after document upload
+    setTimeout(async () => {
+      console.log(`Refreshing profile after ${documentKey} document upload...`);
+      await handleProfileRefresh();
+    }, 2000);
   };
 
   const handleError = (errorMsg) => {
@@ -107,6 +138,16 @@ const BusinessVerification = ({
   /* ------------------ UI ------------------ */
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      {isRefreshing && (
+        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+            <span className="text-blue-800 text-sm">
+              Updating verification status...
+            </span>
+          </div>
+        </div>
+      )}
       {/* Step Indicator */}
       <VerificationStepIndicator
         activeStep={activeStep}

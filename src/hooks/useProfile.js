@@ -34,9 +34,11 @@ export const useProfileData = () => {
     // Convenience getters
     firstName: data?.success ? data.data?.firstName : null,
     lastName: data?.success ? data.data?.lastName : null,
+    businessName: data?.success ? data.data?.businessName : null,
     email: data?.success ? data.data?.email : null,
     code: data?.success ? data.data?.code : null,
     walletBalance: data?.success ? data.data?.walletBalance : 0,
+    customerTypeCode: data?.success ? data.data?.customerTypeCode : null,
     customerType: data?.success ? data.data?.customerTypeName : null,
     kycStatus: data?.success ? data.data?.kycStatus : null,
     onboardingStatus: data?.success ? data.data?.onboardingStatus : null,

@@ -34,7 +34,9 @@ const Overview = () => {
     kycStatus,
     verifications,
     profile,
+    businessName,
     isPending,
+    customerTypeCode,
   } = useProfileData();
 
   // Check if PIN is set and show modal if not
@@ -59,7 +61,9 @@ const Overview = () => {
 
   // Fallback user data
   const fallbackUserData = JSON.parse(localStorage.getItem("userData") || "{}");
-  const userFirstName = firstName || fallbackUserData.firstName || "User";
+  const userFirstName = customerTypeCode === 'Business' 
+  ? (businessName || fallbackUserData.businessName || "Business") 
+  : (firstName || fallbackUserData.firstName || "User");
 
   // Get additional profile data
   const profileData = profile?.data || fallbackUserData;
@@ -259,7 +263,7 @@ const Overview = () => {
             >
               <div className="w-2 h-2 rounded-full bg-white/80"></div>
               <span className="text-sm font-medium">
-                Complete verification to activate your account
+                Complete verification to activate our services
               </span>
             </button>
           ) : (
