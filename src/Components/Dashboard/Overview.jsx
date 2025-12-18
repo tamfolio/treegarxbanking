@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PaperAirplaneIcon,
   ArrowDownTrayIcon,
@@ -15,12 +15,15 @@ import { useTransactions } from "../../hooks/useTransactions";
 import { getTimeBasedGreeting } from "../../utils/timeGreeting";
 import StatementDownloadModal from "../Modals/StatementDownloadModal";
 import PayoutModal from "../Modals/PayoutModal";
+import SetPinModal from "../Modals/SetPinModal";
+import TransactionLimits from "./TransactionLimit";
 
 const Overview = () => {
   const [showStatementModal, setShowStatementModal] = useState(false);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [copiedField, setCopiedField] = useState("");
+  const [showSetPinModal, setShowSetPinModal] = useState(false);
 
   // Get profile data from global state
   const {
@@ -33,6 +36,19 @@ const Overview = () => {
     profile,
     isPending,
   } = useProfileData();
+
+  // Check if PIN is set and show modal if not
+  useEffect(() => {
+    if (profile?.data && profile.data.pinSet === false) {
+      setShowSetPinModal(true);
+    }
+  }, [profile]);
+
+  // Handle PIN setup success
+  const handlePinSetSuccess = () => {
+    console.log("PIN set successfully");
+    // Profile will be refetched automatically by the mutation
+  };
 
   // Get recent transactions (last 5)
   const { data: transactionsData, isPending: transactionsLoading } =
@@ -47,10 +63,12 @@ const Overview = () => {
 
   // Get additional profile data
   const profileData = profile?.data || fallbackUserData;
+  console.log("profiledata", profileData);
   const customerTag = profileData?.customer?.tag;
   const accountNumber =
-    profileData?.customer?.accounts?.[0]?.accountNumber ||
-    profileData?.accountNumber;
+    profileData?.customer?.accountNumber || // ← Direct path first
+    profileData?.accountNumber || // ← Fallback 1
+    profileData?.customer?.accounts?.[0]?.accountNumber; // ← Fallback 2
   const interestInfo = profileData?.customer?.interest;
   const transactions = transactionsData?.success
     ? transactionsData.data.items
@@ -181,6 +199,11 @@ const Overview = () => {
     setTimeout(() => setShowComingSoon(false), 3000); // Auto hide after 3 seconds
   };
 
+  // Handler for KYC verification - routes to profile page
+  const handleKYCVerification = () => {
+    window.location.href = "/profile";
+  };
+
   const quickActions = [
     {
       name: "Send Money",
@@ -228,29 +251,35 @@ const Overview = () => {
             </p>
           </div>
 
-          {/* KYC Status badge */}
-          <div
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
-              kycStatus === "Verified"
-                ? "bg-green-50 text-green-600"
-                : kycStatus === "Pending"
-                ? "bg-orange-50 text-orange-600"
-                : "bg-slate-50 text-slate-600"
-            }`}
-          >
+          {/* KYC Status badge / CTA */}
+          {kycStatus === "Pending" ? (
+            <button
+              onClick={handleKYCVerification}
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white transition-colors duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+            >
+              <div className="w-2 h-2 rounded-full bg-white/80"></div>
+              <span className="text-sm font-medium">
+                Complete verification to activate your account
+              </span>
+            </button>
+          ) : (
             <div
-              className={`w-2 h-2 rounded-full ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
                 kycStatus === "Verified"
-                  ? "bg-green-400"
-                  : kycStatus === "Pending"
-                  ? "bg-orange-400"
-                  : "bg-slate-400"
+                  ? "bg-green-50 text-green-600"
+                  : "bg-slate-50 text-slate-600"
               }`}
-            ></div>
-            <span className="text-sm font-medium">
-              KYC {kycStatus || "Unknown"}
-            </span>
-          </div>
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  kycStatus === "Verified" ? "bg-green-400" : "bg-slate-400"
+                }`}
+              ></div>
+              <span className="text-sm font-medium">
+                KYC {kycStatus || "Unknown"}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -355,6 +384,9 @@ const Overview = () => {
               ))}
             </div>
           </div>
+
+          {/* Transaction Limits - Full width above balance */}
+          <TransactionLimits />
         </div>
 
         {/* Right column - Recent Transactions */}
@@ -482,6 +514,13 @@ const Overview = () => {
           </div>
         </div>
       )}
+
+      {/* Set PIN Modal */}
+      <SetPinModal
+        isOpen={showSetPinModal}
+        onClose={() => setShowSetPinModal(false)}
+        onSuccess={handlePinSetSuccess}
+      />
 
       {/* Statement Download Modal */}
       <StatementDownloadModal

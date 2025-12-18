@@ -132,13 +132,11 @@ const Dashboard = () => {
         <div className="flex flex-col h-full">
           {/* Logo and close button */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">TX</span>
-              </div>
+            <div className="flex items-center space-x-1">
+                <img src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766038036/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw.png" alt="" className="w-[100px] h-[80px]"/>
               <div>
-                <div className="text-lg font-semibold text-slate-900">
-                  Treegar X
+                <div className="text-md font-semibold text-slate-900">
+                  Nexus
                 </div>
                 <div className="text-xs text-slate-500">Online Banking</div>
               </div>

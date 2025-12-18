@@ -9,6 +9,7 @@ import {
   usePayout,
 } from "../../hooks/useTransactions";
 import { toast } from "react-hot-toast";
+import PinVerificationModal from "../Modals/PinVerificationModal";
 
 const SingleTransferForm = ({
   prefilledData = {},
@@ -22,6 +23,8 @@ const SingleTransferForm = ({
   const [bankSearchTerm, setBankSearchTerm] = useState("");
   const [isResolving, setIsResolving] = useState(false);
   const [resolvedAccount, setResolvedAccount] = useState(null);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pendingTransactionData, setPendingTransactionData] = useState(null);
 
   const [formData, setFormData] = useState({
     bankId: "",
@@ -260,14 +263,29 @@ const SingleTransferForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Form submission
+  // Form submission - now shows PIN modal instead of direct submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
+    // Store transaction data and show PIN modal
+    setPendingTransactionData({
+      ...formData,
+      beneficiaryName: resolvedAccount.accountName
+    });
+    setShowPinModal(true);
+  };
+
+  // Handle PIN verification success
+  const handlePinVerified = async ({ pin, transactionData }) => {
     try {
-      const result = await payoutMutation.mutateAsync(formData);
+      const payloadData = {
+        ...transactionData,
+        pin: pin
+      };
+
+      const result = await payoutMutation.mutateAsync(payloadData);
       if (result.success) {
         toast.success("Transfer completed successfully!");
         onSuccess(result.data);
@@ -278,229 +296,243 @@ const SingleTransferForm = ({
     } catch (error) {
       toast.error(error.message || "Failed to process transfer");
       setErrors({ submit: error.message || "Failed to process transfer" });
+      
+      // Re-throw error to be handled by the PIN modal
+      throw error;
     }
   };
 
   const isLoading = payoutMutation.isPending;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Bank Selection */}
-      <div className="relative">
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Select Bank
-        </label>
-
-        <input
-          type="text"
-          value={bankSearchTerm}
-          onChange={(e) => handleBankSearch(e.target.value)}
-          onFocus={() => setShowBankDropdown(true)}
-          disabled={banksLoading}
-          placeholder="Search for a bank..."
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
-            errors.bankId ? "border-red-300" : "border-slate-200"
-          }`}
-        />
-
-        {/* Bank Dropdown */}
-        {showBankDropdown && (
-          <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-            {banksLoading ? (
-              <div className="px-4 py-8 text-center">
-                <div className="inline-flex items-center space-x-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                  <span className="text-slate-600 text-sm">
-                    Loading banks...
-                  </span>
-                </div>
-              </div>
-            ) : filteredBanks.length > 0 ? (
-              filteredBanks.map((bank) => (
-                <button
-                  key={bank.bankId}
-                  type="button"
-                  onClick={() => handleBankSelect(bank)}
-                  className="w-full px-3 py-2 text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none border-b border-slate-100 last:border-b-0 transition-colors"
-                >
-                  <div className="text-sm font-medium text-slate-800">
-                    {bank.bankName}
-                  </div>
-                </button>
-              ))
-            ) : (
-              <div className="px-3 py-4 text-sm text-slate-500 text-center">
-                {bankSearchTerm
-                  ? `No banks found matching "${bankSearchTerm}"`
-                  : "Start typing to search banks"}
-              </div>
-            )}
-          </div>
-        )}
-
-        {showBankDropdown && (
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setShowBankDropdown(false)}
-          ></div>
-        )}
-
-        {errors.bankId && (
-          <p className="mt-1 text-xs text-red-600">{errors.bankId}</p>
-        )}
-      </div>
-
-      {/* Account Number */}
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Account Number
-        </label>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Bank Selection */}
         <div className="relative">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Select Bank
+          </label>
+
           <input
             type="text"
-            name="accountNumber"
-            value={formData.accountNumber || ""}
-            onChange={handleAccountNumberChange}
-            placeholder="Enter 10-digit account number"
-            maxLength="10"
-            className={`w-full px-3 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
-              errors.accountNumber ? "border-red-300" : "border-slate-200"
+            value={bankSearchTerm}
+            onChange={(e) => handleBankSearch(e.target.value)}
+            onFocus={() => setShowBankDropdown(true)}
+            disabled={banksLoading}
+            placeholder="Search for a bank..."
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
+              errors.bankId ? "border-red-300" : "border-slate-200"
             }`}
           />
-          {formData.accountNumber && formData.bankId && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              {isResolving ? (
-                <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-              ) : resolvedAccount ? (
-                <CheckCircleIcon className="w-4 h-4 text-green-600" />
-              ) : null}
+
+          {/* Bank Dropdown */}
+          {showBankDropdown && (
+            <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {banksLoading ? (
+                <div className="px-4 py-8 text-center">
+                  <div className="inline-flex items-center space-x-2">
+                    <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                    <span className="text-slate-600 text-sm">
+                      Loading banks...
+                    </span>
+                  </div>
+                </div>
+              ) : filteredBanks.length > 0 ? (
+                filteredBanks.map((bank) => (
+                  <button
+                    key={bank.bankId}
+                    type="button"
+                    onClick={() => handleBankSelect(bank)}
+                    className="w-full px-3 py-2 text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none border-b border-slate-100 last:border-b-0 transition-colors"
+                  >
+                    <div className="text-sm font-medium text-slate-800">
+                      {bank.bankName}
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-4 text-sm text-slate-500 text-center">
+                  {bankSearchTerm
+                    ? `No banks found matching "${bankSearchTerm}"`
+                    : "Start typing to search banks"}
+                </div>
+              )}
             </div>
+          )}
+
+          {showBankDropdown && (
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setShowBankDropdown(false)}
+            ></div>
+          )}
+
+          {errors.bankId && (
+            <p className="mt-1 text-xs text-red-600">{errors.bankId}</p>
           )}
         </div>
 
-        {resolvedAccount && (
-          <p className="text-xs text-green-600 mt-1 flex items-center space-x-1">
-            <CheckCircleIcon className="w-3 h-3" />
-            <span>Account Name: {resolvedAccount.accountName}</span>
-          </p>
-        )}
+        {/* Account Number */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Account Number
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              name="accountNumber"
+              value={formData.accountNumber || ""}
+              onChange={handleAccountNumberChange}
+              placeholder="Enter 10-digit account number"
+              maxLength="10"
+              className={`w-full px-3 py-2 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
+                errors.accountNumber ? "border-red-300" : "border-slate-200"
+              }`}
+            />
+            {formData.accountNumber && formData.bankId && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                {isResolving ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                ) : resolvedAccount ? (
+                  <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                ) : null}
+              </div>
+            )}
+          </div>
 
-        {isResolving && (
-          <p className="text-xs text-blue-600 mt-1">
-            🔄 Resolving account name...
-          </p>
-        )}
+          {resolvedAccount && (
+            <p className="text-xs text-green-600 mt-1 flex items-center space-x-1">
+              <CheckCircleIcon className="w-3 h-3" />
+              <span>Account Name: {resolvedAccount.accountName}</span>
+            </p>
+          )}
 
-        {errors.accountNumber && (
-          <p className="mt-1 text-xs text-red-600">{errors.accountNumber}</p>
-        )}
-      </div>
+          {isResolving && (
+            <p className="text-xs text-blue-600 mt-1">
+              🔄 Resolving account name...
+            </p>
+          )}
 
-      {/* Amount */}
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Amount
-        </label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 text-sm pointer-events-none z-10">
-            ₦
-          </span>
+          {errors.accountNumber && (
+            <p className="mt-1 text-xs text-red-600">{errors.accountNumber}</p>
+          )}
+        </div>
+
+        {/* Amount */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Amount
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 text-sm pointer-events-none z-10">
+              ₦
+            </span>
+            <input
+              type="text"
+              name="displayAmount"
+              value={formData.displayAmount || ""}
+              onChange={handleAmountChange}
+              placeholder="0.00"
+              className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
+                errors.amount ? "border-red-300" : "border-slate-200"
+              }`}
+              style={{ paddingLeft: "2.25rem" }}
+            />
+          </div>
+          {formData.amount > 0 && (
+            <p className="mt-1 text-xs text-slate-500">
+              Amount: ₦
+              {parseAmount(formData.displayAmount || "0").toLocaleString()}
+            </p>
+          )}
+          {errors.amount && (
+            <p className="mt-1 text-xs text-red-600">{errors.amount}</p>
+          )}
+        </div>
+
+        {/* Narration */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Narration
+          </label>
           <input
             type="text"
-            name="displayAmount"
-            value={formData.displayAmount || ""}
-            onChange={handleAmountChange}
-            placeholder="0.00"
-            className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
-              errors.amount ? "border-red-300" : "border-slate-200"
-            }`}
-            style={{ paddingLeft: "2.25rem" }}
-          />
-        </div>
-        {formData.amount > 0 && (
-          <p className="mt-1 text-xs text-slate-500">
-            Amount: ₦
-            {parseAmount(formData.displayAmount || "0").toLocaleString()}
-          </p>
-        )}
-        {errors.amount && (
-          <p className="mt-1 text-xs text-red-600">{errors.amount}</p>
-        )}
-      </div>
-
-      {/* Narration */}
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Narration
-        </label>
-        <input
-          type="text"
-          name="narration"
-          value={formData.narration || ""}
-          onChange={handleInputChange}
-          placeholder="Purpose of transfer"
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
-            errors.narration ? "border-red-300" : "border-slate-200"
-          }`}
-        />
-        {errors.narration && (
-          <p className="mt-1 text-xs text-red-600">{errors.narration}</p>
-        )}
-      </div>
-
-      {/* Save Beneficiary Toggle */}
-      <div className="flex items-center justify-between">
-        <label
-          htmlFor="saveBeneficiary"
-          className="text-sm font-medium text-slate-700"
-        >
-          Save as beneficiary
-        </label>
-        <button
-          type="button"
-          onClick={() =>
-            setFormData((prev) => ({
-              ...prev,
-              saveBeneficiary: !prev.saveBeneficiary,
-            }))
-          }
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
-            formData.saveBeneficiary ? "bg-blue-600" : "bg-slate-200"
-          }`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
-              formData.saveBeneficiary ? "translate-x-6" : "translate-x-1"
+            name="narration"
+            value={formData.narration || ""}
+            onChange={handleInputChange}
+            placeholder="Purpose of transfer"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
+              errors.narration ? "border-red-300" : "border-slate-200"
             }`}
           />
-        </button>
-      </div>
-
-      {/* Submit Error */}
-      {errors.submit && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">{errors.submit}</p>
+          {errors.narration && (
+            <p className="mt-1 text-xs text-red-600">{errors.narration}</p>
+          )}
         </div>
-      )}
 
-      {/* Buttons */}
-      <div className="flex space-x-3 pt-4">
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading || !resolvedAccount}
-          className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white rounded-lg transition-colors"
-        >
-          {isLoading ? "Processing..." : "Send Money"}
-        </button>
-      </div>
-    </form>
+        {/* Save Beneficiary Toggle */}
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="saveBeneficiary"
+            className="text-sm font-medium text-slate-700"
+          >
+            Save as beneficiary
+          </label>
+          <button
+            type="button"
+            onClick={() =>
+              setFormData((prev) => ({
+                ...prev,
+                saveBeneficiary: !prev.saveBeneficiary,
+              }))
+            }
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+              formData.saveBeneficiary ? "bg-blue-600" : "bg-slate-200"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
+                formData.saveBeneficiary ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Submit Error */}
+        {errors.submit && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-800">{errors.submit}</p>
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="flex space-x-3 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading || !resolvedAccount}
+            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white rounded-lg transition-colors"
+          >
+            {isLoading ? "Processing..." : "Send Money"}
+          </button>
+        </div>
+      </form>
+
+      {/* PIN Verification Modal */}
+      <PinVerificationModal
+        isOpen={showPinModal}
+        onClose={() => setShowPinModal(false)}
+        onSuccess={handlePinVerified}
+        transactionData={pendingTransactionData}
+        transactionType="transfer"
+      />
+    </>
   );
 };
 

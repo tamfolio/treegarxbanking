@@ -189,39 +189,6 @@ const BusinessVerification = ({
           )}
         </>
       )}
-
-      {/* Enhanced Debug info */}
-      <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded space-y-1">
-        <div>
-          <strong>🐛 Debug Info:</strong>
-        </div>
-        <div>
-          Current activeStep:{" "}
-          <strong className="text-red-600">{activeStep}</strong>
-        </div>
-        <div>
-          Should be:{" "}
-          <strong className="text-green-600">{determineStep()}</strong>
-        </div>
-        <div>
-          BVN Verified:{" "}
-          <strong>{isBVNVerified ? "✅ TRUE" : "❌ FALSE"}</strong>
-        </div>
-        <div>
-          NIN Verified:{" "}
-          <strong>{isNINVerified ? "✅ TRUE" : "❌ FALSE"}</strong>
-        </div>
-        <div>
-          Can Access Documents:{" "}
-          <strong>{canAccessDocuments ? "✅ TRUE" : "❌ FALSE"}</strong>
-        </div>
-        <div>
-          Documents Count: <strong>{documents.length}</strong>
-        </div>
-        <div className="text-red-600">
-          ⚠️ If activeStep shows "liveness", there's a bug!
-        </div>
-      </div>
     </div>
   );
 };

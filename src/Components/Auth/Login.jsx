@@ -144,13 +144,14 @@ const Login = () => {
         <div className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl shadow-blue-500/10 p-8 animate-fade-in-up">
           {/* Logo and Header */}
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-6">
+            <div className="flex items-center justify-center mb-1">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-xl">TX</span>
-                </div>
-                <div className="text-2xl font-bold text-slate-800">
-                  Treegar X
+                <div className="flex items-center justify-center">
+                  <img
+                    src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766038036/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw.png"
+                    alt=""
+                    className="w-[150px] h-[100px]"
+                  />
                 </div>
               </div>
             </div>

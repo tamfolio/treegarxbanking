@@ -56,6 +56,7 @@ export const transactionsService = {
       accountNumber: payoutData.accountNumber,
       beneficiaryName: payoutData.beneficiaryName,
       saveBeneficiary: payoutData.saveBeneficiary || false,
+      pin: payoutData.pin, // Add PIN to payload
     });
     return response.data;
   },
@@ -74,6 +75,7 @@ export const transactionsService = {
   bulkPayout: async (bulkPayoutData) => {
     const response = await apiClient.post("/customer/transfers/payout/bulk", {
       groupKey: bulkPayoutData.groupKey,
+      pin: bulkPayoutData.pin, // Add PIN to payload
       items: bulkPayoutData.items.map((item) => ({
         bankId: parseInt(item.bankId),
         amount: parseFloat(item.amount),
@@ -91,6 +93,7 @@ export const transactionsService = {
       amount: parseFloat(tagPayData.amount),
       narration: tagPayData.narration,
       destinationTagOrCode: tagPayData.destinationTagOrCode,
+      pin: tagPayData.pin, // Add PIN to payload
     });
     return response.data;
   },

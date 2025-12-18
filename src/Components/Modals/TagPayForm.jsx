@@ -9,6 +9,7 @@ import {
   useTagPay,
 } from '../../hooks/useTransactions';
 import { toast } from 'react-hot-toast';
+import PinVerificationModal from "../Modals/PinVerificationModal";
 
 const TagPayForm = ({
   onSuccess,
@@ -17,6 +18,8 @@ const TagPayForm = ({
   const [errors, setErrors] = useState({});
   const [isResolving, setIsResolving] = useState(false);
   const [resolvedCustomer, setResolvedCustomer] = useState(null);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pendingTransactionData, setPendingTransactionData] = useState(null);
 
   const [formData, setFormData] = useState({
     destinationTag: "",
@@ -146,22 +149,34 @@ const TagPayForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Form submission
+  // Form submission - now shows PIN modal instead of direct submission
   const handleSubmit = async (e) => {
     e.preventDefault();
   
     if (!validateForm()) return;
   
+    // Store transaction data and show PIN modal
+    const payloadData = {
+      amount: formData.amount,
+      narration: formData.narration,
+      destinationTagOrCode: formData.destinationTag,
+    };
+
+    setPendingTransactionData(payloadData);
+    setShowPinModal(true);
+  };
+
+  // Handle PIN verification success
+  const handlePinVerified = async ({ pin, transactionData }) => {
     try {
       const payloadData = {
-        amount: formData.amount,
-        narration: formData.narration,
-        destinationTagOrCode: formData.destinationTag,
+        ...transactionData,
+        pin: pin
       };
-  
+
       const result = await tagPayMutation.mutateAsync(payloadData);
       if (result.success) {
-        toast.success(`Tag Pay completed! Sent ₦${formData.amount.toLocaleString()} to ${resolvedCustomer.name}`);
+        toast.success(`Tag Pay completed! Sent ₦${formData.amount.toLocaleString()} to ${resolvedCustomer.name || resolvedCustomer.fullName}`);
         onSuccess(result.data);
       } else {
         toast.error(result.message || "Tag Pay failed");
@@ -170,184 +185,195 @@ const TagPayForm = ({
     } catch (error) {
       toast.error(error.message || "Failed to process Tag Pay");
       setErrors({ submit: error.message || "Failed to process Tag Pay" });
+      
+      // Re-throw error to be handled by the PIN modal
+      throw error;
     }
   };
 
   const isLoading = tagPayMutation.isPending;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Header Info */}
-
-
-      {/* Customer Tag Input */}
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Customer Tag
-        </label>
-        <div className="relative">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-            <HashtagIcon className="w-4 h-4 text-slate-400" />
-          </div>
-          <input
-            type="text"
-            value={formData.destinationTag}
-            onChange={handleTagChange}
-            placeholder="tg-abc123 or customer tag"
-            className={`w-full pl-9 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
-              errors.destinationTag ? "border-red-300" : "border-slate-200"
-            }`}
-          />
-          {formData.destinationTag && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              {isResolving ? (
-                <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-              ) : resolvedCustomer ? (
-                <CheckCircleIcon className="w-4 h-4 text-green-600" />
-              ) : null}
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Customer Tag Input */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Customer Tag
+          </label>
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+              <HashtagIcon className="w-4 h-4 text-slate-400" />
             </div>
+            <input
+              type="text"
+              value={formData.destinationTag}
+              onChange={handleTagChange}
+              placeholder="tg-abc123 or customer tag"
+              className={`w-full pl-9 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
+                errors.destinationTag ? "border-red-300" : "border-slate-200"
+              }`}
+            />
+            {formData.destinationTag && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                {isResolving ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                ) : resolvedCustomer ? (
+                  <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                ) : null}
+              </div>
+            )}
+          </div>
+
+          {resolvedCustomer && (
+            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <UserIcon className="w-4 h-4 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-green-800">
+                    {resolvedCustomer.name || resolvedCustomer.fullName || 'Customer Found'}
+                  </p>
+                  <p className="text-xs text-green-600">
+                    Tag: {resolvedCustomer.customerTag || resolvedCustomer.tag || formData.destinationTag}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isResolving && (
+            <p className="text-xs text-blue-600 mt-1">
+              🔄 Resolving customer tag...
+            </p>
+          )}
+
+          {errors.destinationTag && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.destinationTag}
+            </p>
           )}
         </div>
 
-        {resolvedCustomer && (
-          <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <UserIcon className="w-4 h-4 text-green-600" />
-              <div>
-                <p className="text-sm font-medium text-green-800">
-                  {resolvedCustomer.name || resolvedCustomer.fullName || 'Customer Found'}
-                </p>
-                <p className="text-xs text-green-600">
-                  Tag: {resolvedCustomer.customerTag || resolvedCustomer.tag || formData.destinationTag}
-                </p>
+        {/* Amount */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Amount
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 text-sm pointer-events-none z-10">
+              ₦
+            </span>
+            <input
+              type="text"
+              name="displayAmount"
+              value={formData.displayAmount || ""}
+              onChange={handleAmountChange}
+              placeholder="0.00"
+              className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
+                errors.amount ? "border-red-300" : "border-slate-200"
+              }`}
+              style={{ paddingLeft: "2.25rem" }}
+            />
+          </div>
+          {formData.amount > 0 && (
+            <p className="mt-1 text-xs text-slate-500">
+              Amount: ₦
+              {parseAmount(
+                formData.displayAmount || "0"
+              ).toLocaleString()}
+            </p>
+          )}
+          {errors.amount && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.amount}
+            </p>
+          )}
+        </div>
+
+        {/* Narration */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Narration
+          </label>
+          <input
+            type="text"
+            name="narration"
+            value={formData.narration || ""}
+            onChange={handleInputChange}
+            placeholder="What's this payment for?"
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
+              errors.narration ? "border-red-300" : "border-slate-200"
+            }`}
+          />
+          {errors.narration && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.narration}
+            </p>
+          )}
+        </div>
+
+        {/* Transfer Info */}
+        {resolvedCustomer && formData.amount > 0 && (
+          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <h4 className="font-medium text-slate-800 mb-2">Transfer Summary</h4>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-600">To:</span>
+                <span className="font-medium text-slate-800">
+                  {resolvedCustomer.name || resolvedCustomer.fullName}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Tag:</span>
+                <span className="font-mono text-slate-800">
+                  {resolvedCustomer.customerTag || resolvedCustomer.tag || formData.destinationTag}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Amount:</span>
+                <span className="font-bold text-slate-800">
+                  ₦{formData.amount.toLocaleString()}
+                </span>
               </div>
             </div>
           </div>
         )}
 
-        {isResolving && (
-          <p className="text-xs text-blue-600 mt-1">
-            🔄 Resolving customer tag...
-          </p>
-        )}
-
-        {errors.destinationTag && (
-          <p className="mt-1 text-xs text-red-600">
-            {errors.destinationTag}
-          </p>
-        )}
-      </div>
-
-      {/* Amount */}
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Amount
-        </label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 text-sm pointer-events-none z-10">
-            ₦
-          </span>
-          <input
-            type="text"
-            name="displayAmount"
-            value={formData.displayAmount || ""}
-            onChange={handleAmountChange}
-            placeholder="0.00"
-            className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
-              errors.amount ? "border-red-300" : "border-slate-200"
-            }`}
-            style={{ paddingLeft: "2.25rem" }}
-          />
-        </div>
-        {formData.amount > 0 && (
-          <p className="mt-1 text-xs text-slate-500">
-            Amount: ₦
-            {parseAmount(
-              formData.displayAmount || "0"
-            ).toLocaleString()}
-          </p>
-        )}
-        {errors.amount && (
-          <p className="mt-1 text-xs text-red-600">
-            {errors.amount}
-          </p>
-        )}
-      </div>
-
-      {/* Narration */}
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Narration
-        </label>
-        <input
-          type="text"
-          name="narration"
-          value={formData.narration || ""}
-          onChange={handleInputChange}
-          placeholder="What's this payment for?"
-          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all ${
-            errors.narration ? "border-red-300" : "border-slate-200"
-          }`}
-        />
-        {errors.narration && (
-          <p className="mt-1 text-xs text-red-600">
-            {errors.narration}
-          </p>
-        )}
-      </div>
-
-      {/* Transfer Info */}
-      {resolvedCustomer && formData.amount > 0 && (
-        <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <h4 className="font-medium text-slate-800 mb-2">Transfer Summary</h4>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-600">To:</span>
-              <span className="font-medium text-slate-800">
-                {resolvedCustomer.name || resolvedCustomer.fullName}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600">Tag:</span>
-              <span className="font-mono text-slate-800">
-                {resolvedCustomer.customerTag || resolvedCustomer.tag || formData.destinationTag}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600">Amount:</span>
-              <span className="font-bold text-slate-800">
-                ₦{formData.amount.toLocaleString()}
-              </span>
-            </div>
+        {/* Submit Error */}
+        {errors.submit && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-800">{errors.submit}</p>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Submit Error */}
-      {errors.submit && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">{errors.submit}</p>
+        {/* Buttons */}
+        <div className="flex space-x-3 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading || !resolvedCustomer}
+            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white rounded-lg transition-colors"
+          >
+            {isLoading ? "Processing..." : "Send Money"}
+          </button>
         </div>
-      )}
+      </form>
 
-      {/* Buttons */}
-      <div className="flex space-x-3 pt-4">
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading || !resolvedCustomer}
-          className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white rounded-lg transition-colors"
-        >
-          {isLoading ? "Processing..." : "Send Money"}
-        </button>
-      </div>
-    </form>
+      {/* PIN Verification Modal */}
+      <PinVerificationModal
+        isOpen={showPinModal}
+        onClose={() => setShowPinModal(false)}
+        onSuccess={handlePinVerified}
+        transactionData={pendingTransactionData}
+        transactionType="tagpay"
+      />
+    </>
   );
 };
 

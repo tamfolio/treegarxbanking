@@ -11,11 +11,14 @@ import {
   useBulkPayout,
 } from "../../hooks/useTransactions";
 import { toast } from "react-hot-toast";
+import PinVerificationModal from "../Modals/PinVerificationModal";
 
 const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
   const [bulkItems, setBulkItems] = useState([]);
   const [groupKey, setGroupKey] = useState("");
   const [errors, setErrors] = useState({});
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pendingTransactionData, setPendingTransactionData] = useState(null);
 
   const { data: banksData, isLoading: banksLoading } = useBanks();
   const resolveAccountMutation = useResolveAccount();
@@ -302,26 +305,38 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Form submission
+  // Form submission - now shows PIN modal instead of direct submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
+    // Store transaction data and show PIN modal
+    const bulkData = {
+      groupKey: groupKey || `BULK-${Date.now()}`,
+      items: bulkItems.map((item) => ({
+        bankId: item.bankId,
+        amount: item.amount,
+        narration: item.narration,
+        accountNumber: item.accountNumber,
+        beneficiaryName: item.beneficiaryName,
+        saveBeneficiary: item.saveBeneficiary,
+      })),
+    };
+
+    setPendingTransactionData(bulkData);
+    setShowPinModal(true);
+  };
+
+  // Handle PIN verification success
+  const handlePinVerified = async ({ pin, transactionData }) => {
     try {
-      const bulkData = {
-        groupKey: groupKey || `BULK-${Date.now()}`,
-        items: bulkItems.map((item) => ({
-          bankId: item.bankId,
-          amount: item.amount,
-          narration: item.narration,
-          accountNumber: item.accountNumber,
-          beneficiaryName: item.beneficiaryName,
-          saveBeneficiary: item.saveBeneficiary,
-        })),
+      const payloadData = {
+        ...transactionData,
+        pin: pin
       };
 
-      const result = await bulkPayoutMutation.mutateAsync(bulkData);
+      const result = await bulkPayoutMutation.mutateAsync(payloadData);
       if (result.success) {
         toast.success(
           `Bulk transfer completed! ${bulkItems.length} recipients processed.`
@@ -334,336 +349,350 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
     } catch (error) {
       toast.error(error.message || "Failed to process bulk transfer");
       setErrors({ submit: error.message || "Failed to process bulk transfer" });
+      
+      // Re-throw error to be handled by the PIN modal
+      throw error;
     }
   };
 
   const isLoading = bulkPayoutMutation.isPending;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-800">
-          Bulk Transfer Recipients
-        </h3>
-        <button
-          type="button"
-          onClick={addBulkItem}
-          className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-        >
-          <PlusIcon className="w-4 h-4" />
-          <span>Add Recipient</span>
-        </button>
-      </div>
-
-      {bulkItems.length === 0 ? (
-        <div className="text-center py-8">
-          <UserGroupIcon className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-          <p className="text-slate-500">No recipients added yet</p>
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-800">
+            Bulk Transfer Recipients
+          </h3>
           <button
             type="button"
             onClick={addBulkItem}
-            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
           >
-            Add First Recipient
+            <PlusIcon className="w-4 h-4" />
+            <span>Add Recipient</span>
           </button>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {bulkItems.map((item, index) => {
-              const filteredBanksForItem = getBulkFilteredBanks(
-                item.bankSearchTerm || ""
-              );
 
-              return (
-                <div
-                  key={item.id}
-                  className="border border-slate-200 rounded-lg p-4 bg-slate-50"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-slate-800">
-                      Recipient {index + 1}
-                    </h4>
-                    <button
-                      type="button"
-                      onClick={() => removeBulkItem(item.id)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  </div>
+        {bulkItems.length === 0 ? (
+          <div className="text-center py-8">
+            <UserGroupIcon className="w-16 h-16 mx-auto text-slate-300 mb-4" />
+            <p className="text-slate-500">No recipients added yet</p>
+            <button
+              type="button"
+              onClick={addBulkItem}
+              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              Add First Recipient
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {bulkItems.map((item, index) => {
+                const filteredBanksForItem = getBulkFilteredBanks(
+                  item.bankSearchTerm || ""
+                );
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Bank Selection */}
-                    <div className="md:col-span-2">
-                      <label className="block text-sm text-slate-600 mb-1">
-                        Select Bank
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={item.bankSearchTerm || ""}
-                          onChange={(e) =>
-                            handleBulkBankSearch(item.id, e.target.value)
-                          }
-                          onFocus={() =>
-                            updateBulkItem(item.id, "showBankDropdown", true)
-                          }
-                          disabled={banksLoading || item.resolved}
-                          placeholder="Search for a bank..."
-                          className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
-                        />
+                return (
+                  <div
+                    key={item.id}
+                    className="border border-slate-200 rounded-lg p-4 bg-slate-50"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-medium text-slate-800">
+                        Recipient {index + 1}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => removeBulkItem(item.id)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
 
-                        {/* Bank Dropdown */}
-                        {item.showBankDropdown && !item.resolved && (
-                          <div className="absolute z-30 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                            {banksLoading ? (
-                              <div className="px-3 py-4 text-center">
-                                <div className="inline-flex items-center space-x-2">
-                                  <div className="animate-spin h-3 w-3 border border-blue-600 border-t-transparent rounded-full"></div>
-                                  <span className="text-slate-600 text-xs">
-                                    Loading...
-                                  </span>
-                                </div>
-                              </div>
-                            ) : filteredBanksForItem.length > 0 ? (
-                              filteredBanksForItem.map((bank) => (
-                                <button
-                                  key={bank.bankId}
-                                  type="button"
-                                  onClick={() =>
-                                    handleBulkBankSelect(item.id, bank)
-                                  }
-                                  className="w-full px-3 py-2 text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none border-b border-slate-100 last:border-b-0 transition-colors"
-                                >
-                                  <div className="text-xs font-medium text-slate-800">
-                                    {bank.bankName}
-                                  </div>
-                                  {bank.providerBankCode && (
-                                    <div className="text-xs text-slate-500">
-                                      Code: {bank.providerBankCode}
-                                    </div>
-                                  )}
-                                </button>
-                              ))
-                            ) : (
-                              <div className="px-3 py-3 text-xs text-slate-500 text-center">
-                                {item.bankSearchTerm
-                                  ? `No banks found`
-                                  : "Start typing..."}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {item.showBankDropdown && !item.resolved && (
-                          <div
-                            className="fixed inset-0 z-20"
-                            onClick={() =>
-                              updateBulkItem(item.id, "showBankDropdown", false)
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Bank Selection */}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm text-slate-600 mb-1">
+                          Select Bank
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={item.bankSearchTerm || ""}
+                            onChange={(e) =>
+                              handleBulkBankSearch(item.id, e.target.value)
                             }
-                          ></div>
-                        )}
+                            onFocus={() =>
+                              updateBulkItem(item.id, "showBankDropdown", true)
+                            }
+                            disabled={banksLoading || item.resolved}
+                            placeholder="Search for a bank..."
+                            className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
+                          />
 
-                        {item.selectedBank && (
-                          <p className="text-green-600 text-xs mt-1 flex items-center space-x-1">
-                            <CheckCircleIcon className="w-3 h-3" />
-                            <span>{item.selectedBank.bankName} selected</span>
+                          {/* Bank Dropdown */}
+                          {item.showBankDropdown && !item.resolved && (
+                            <div className="absolute z-30 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                              {banksLoading ? (
+                                <div className="px-3 py-4 text-center">
+                                  <div className="inline-flex items-center space-x-2">
+                                    <div className="animate-spin h-3 w-3 border border-blue-600 border-t-transparent rounded-full"></div>
+                                    <span className="text-slate-600 text-xs">
+                                      Loading...
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : filteredBanksForItem.length > 0 ? (
+                                filteredBanksForItem.map((bank) => (
+                                  <button
+                                    key={bank.bankId}
+                                    type="button"
+                                    onClick={() =>
+                                      handleBulkBankSelect(item.id, bank)
+                                    }
+                                    className="w-full px-3 py-2 text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none border-b border-slate-100 last:border-b-0 transition-colors"
+                                  >
+                                    <div className="text-xs font-medium text-slate-800">
+                                      {bank.bankName}
+                                    </div>
+                                    {bank.providerBankCode && (
+                                      <div className="text-xs text-slate-500">
+                                        Code: {bank.providerBankCode}
+                                      </div>
+                                    )}
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-3 py-3 text-xs text-slate-500 text-center">
+                                  {item.bankSearchTerm
+                                    ? `No banks found`
+                                    : "Start typing..."}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {item.showBankDropdown && !item.resolved && (
+                            <div
+                              className="fixed inset-0 z-20"
+                              onClick={() =>
+                                updateBulkItem(item.id, "showBankDropdown", false)
+                              }
+                            ></div>
+                          )}
+
+                          {item.selectedBank && (
+                            <p className="text-green-600 text-xs mt-1 flex items-center space-x-1">
+                              <CheckCircleIcon className="w-3 h-3" />
+                              <span>{item.selectedBank.bankName} selected</span>
+                            </p>
+                          )}
+
+                          {item.resolved && (
+                            <p className="text-blue-600 text-xs mt-1 flex items-center space-x-1">
+                              <CheckCircleIcon className="w-3 h-3" />
+                              <span>From saved beneficiaries</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Account Number */}
+                      <div>
+                        <label className="block text-sm text-slate-600 mb-1">
+                          Account Number
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={item.accountNumber}
+                            onChange={(e) =>
+                              handleBulkAccountNumberChange(
+                                item.id,
+                                e.target.value
+                              )
+                            }
+                            placeholder="Enter account number"
+                            maxLength="10"
+                            readOnly={item.resolved}
+                            className="w-full px-3 py-2 pr-10 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
+                          />
+                          {item.accountNumber && item.bankId && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              {item.isResolving ? (
+                                <div className="animate-spin h-3 w-3 border border-blue-600 border-t-transparent rounded-full"></div>
+                              ) : item.resolvedAccount || item.resolved ? (
+                                <CheckCircleIcon className="w-3 h-3 text-green-600" />
+                              ) : null}
+                            </div>
+                          )}
+                        </div>
+
+                        {item.resolvedAccount && (
+                          <p className="text-xs text-green-600 mt-1 flex items-center space-x-1">
+                            <CheckCircleIcon className="w-2 h-2" />
+                            <span>
+                              Verified: {item.resolvedAccount.accountName}
+                            </span>
                           </p>
                         )}
 
-                        {item.resolved && (
-                          <p className="text-blue-600 text-xs mt-1 flex items-center space-x-1">
-                            <CheckCircleIcon className="w-3 h-3" />
-                            <span>From saved beneficiaries</span>
+                        {item.isResolving && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            🔄 Verifying account...
                           </p>
                         )}
                       </div>
-                    </div>
 
-                    {/* Account Number */}
-                    <div>
-                      <label className="block text-sm text-slate-600 mb-1">
-                        Account Number
-                      </label>
-                      <div className="relative">
+                      {/* Beneficiary Name */}
+                      <div>
+                        <label className="block text-sm text-slate-600 mb-1">
+                          Beneficiary Name
+                        </label>
                         <input
                           type="text"
-                          value={item.accountNumber}
-                          onChange={(e) =>
-                            handleBulkAccountNumberChange(
-                              item.id,
-                              e.target.value
-                            )
-                          }
-                          placeholder="Enter account number"
-                          maxLength="10"
-                          readOnly={item.resolved}
-                          className="w-full px-3 py-2 pr-10 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
-                        />
-                        {item.accountNumber && item.bankId && (
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                            {item.isResolving ? (
-                              <div className="animate-spin h-3 w-3 border border-blue-600 border-t-transparent rounded-full"></div>
-                            ) : item.resolvedAccount || item.resolved ? (
-                              <CheckCircleIcon className="w-3 h-3 text-green-600" />
-                            ) : null}
-                          </div>
-                        )}
-                      </div>
-
-                      {item.resolvedAccount && (
-                        <p className="text-xs text-green-600 mt-1 flex items-center space-x-1">
-                          <CheckCircleIcon className="w-2 h-2" />
-                          <span>
-                            Verified: {item.resolvedAccount.accountName}
-                          </span>
-                        </p>
-                      )}
-
-                      {item.isResolving && (
-                        <p className="text-xs text-blue-600 mt-1">
-                          🔄 Verifying account...
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Beneficiary Name */}
-                    <div>
-                      <label className="block text-sm text-slate-600 mb-1">
-                        Beneficiary Name
-                      </label>
-                      <input
-                        type="text"
-                        value={item.beneficiaryName}
-                        onChange={(e) =>
-                          updateBulkItem(
-                            item.id,
-                            "beneficiaryName",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Enter beneficiary name"
-                        readOnly={item.resolved || item.resolvedAccount}
-                        className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
-                      />
-                    </div>
-
-                    {/* Amount */}
-                    <div>
-                      <label className="block text-sm text-slate-600 mb-1">
-                        Amount
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-500 text-sm">
-                          ₦
-                        </span>
-                        <input
-                          type="text"
-                          value={item.displayAmount}
+                          value={item.beneficiaryName}
                           onChange={(e) =>
                             updateBulkItem(
                               item.id,
-                              "displayAmount",
+                              "beneficiaryName",
                               e.target.value
                             )
                           }
-                          placeholder="0.00"
-                          className="w-full pl-6 pr-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
+                          placeholder="Enter beneficiary name"
+                          readOnly={item.resolved || item.resolvedAccount}
+                          className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
                         />
                       </div>
-                      {errors[`bulk_${index}_amount`] && (
-                        <p className="text-xs text-red-600 mt-1">
-                          {errors[`bulk_${index}_amount`]}
-                        </p>
-                      )}
-                    </div>
 
-                    {/* Narration */}
-                    <div>
-                      <label className="block text-sm text-slate-600 mb-1">
-                        Narration
-                      </label>
-                      <input
-                        type="text"
-                        value={item.narration}
-                        onChange={(e) =>
-                          updateBulkItem(item.id, "narration", e.target.value)
-                        }
-                        placeholder="Purpose of transfer"
-                        className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
-                      />
-                      {errors[`bulk_${index}_narration`] && (
-                        <p className="text-xs text-red-600 mt-1">
-                          {errors[`bulk_${index}_narration`]}
-                        </p>
-                      )}
-                    </div>
+                      {/* Amount */}
+                      <div>
+                        <label className="block text-sm text-slate-600 mb-1">
+                          Amount
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-500 text-sm">
+                            ₦
+                          </span>
+                          <input
+                            type="text"
+                            value={item.displayAmount}
+                            onChange={(e) =>
+                              updateBulkItem(
+                                item.id,
+                                "displayAmount",
+                                e.target.value
+                              )
+                            }
+                            placeholder="0.00"
+                            className="w-full pl-6 pr-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
+                          />
+                        </div>
+                        {errors[`bulk_${index}_amount`] && (
+                          <p className="text-xs text-red-600 mt-1">
+                            {errors[`bulk_${index}_amount`]}
+                          </p>
+                        )}
+                      </div>
 
-                    {/* Save as Beneficiary Toggle */}
-                    <div className="md:col-span-2 flex items-center justify-between mt-2 pt-2 border-t border-slate-200">
-                      <label className="text-sm font-medium text-slate-700">
-                        Save as beneficiary
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateBulkItem(
-                            item.id,
-                            "saveBeneficiary",
-                            !item.saveBeneficiary
-                          )
-                        }
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
-                          item.saveBeneficiary ? "bg-blue-600" : "bg-slate-200"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-lg transition-transform ${
-                            item.saveBeneficiary
-                              ? "translate-x-5"
-                              : "translate-x-1"
-                          }`}
+                      {/* Narration */}
+                      <div>
+                        <label className="block text-sm text-slate-600 mb-1">
+                          Narration
+                        </label>
+                        <input
+                          type="text"
+                          value={item.narration}
+                          onChange={(e) =>
+                            updateBulkItem(item.id, "narration", e.target.value)
+                          }
+                          placeholder="Purpose of transfer"
+                          className="w-full px-3 py-2 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-600"
                         />
-                      </button>
+                        {errors[`bulk_${index}_narration`] && (
+                          <p className="text-xs text-red-600 mt-1">
+                            {errors[`bulk_${index}_narration`]}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Save as Beneficiary Toggle */}
+                      <div className="md:col-span-2 flex items-center justify-between mt-2 pt-2 border-t border-slate-200">
+                        <label className="text-sm font-medium text-slate-700">
+                          Save as beneficiary
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateBulkItem(
+                              item.id,
+                              "saveBeneficiary",
+                              !item.saveBeneficiary
+                            )
+                          }
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                            item.saveBeneficiary ? "bg-blue-600" : "bg-slate-200"
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-lg transition-transform ${
+                              item.saveBeneficiary
+                                ? "translate-x-5"
+                                : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {errors.bulk && <p className="text-sm text-red-600">{errors.bulk}</p>}
-
-          {/* Submit Error */}
-          {errors.submit && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-800">{errors.submit}</p>
+                );
+              })}
             </div>
-          )}
 
-          {/* Buttons */}
-          <div className="flex space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white rounded-lg transition-colors"
-            >
-              {isLoading
-                ? "Processing..."
-                : `Send Money (${bulkItems.length} recipients)`}
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
+            {errors.bulk && <p className="text-sm text-red-600">{errors.bulk}</p>}
+
+            {/* Submit Error */}
+            {errors.submit && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-800">{errors.submit}</p>
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="flex space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white rounded-lg transition-colors"
+              >
+                {isLoading
+                  ? "Processing..."
+                  : `Send Money (${bulkItems.length} recipients)`}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* PIN Verification Modal */}
+      <PinVerificationModal
+        isOpen={showPinModal}
+        onClose={() => setShowPinModal(false)}
+        onSuccess={handlePinVerified}
+        transactionData={pendingTransactionData}
+        transactionType="bulk"
+      />
+    </>
   );
 };
 
