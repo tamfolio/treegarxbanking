@@ -130,25 +130,68 @@ const ProfileWorking = () => {
   });
 
   return (
+    <>
+      {/* Add CSS to ensure form elements are responsive while allowing scroll when necessary */}
+      <style jsx>{`
+        .verification-section input,
+        .verification-section select,
+        .verification-section button,
+        .verification-section textarea {
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        
+        .verification-section input[type="file"] {
+          width: 100%;
+          max-width: 100%;
+        }
+        
+        .verification-section {
+          overflow-x: auto;
+        }
+        
+        .verification-section * {
+          box-sizing: border-box;
+        }
+        
+        /* Allow horizontal scroll for wide content but hide scrollbar on webkit browsers */
+        .verification-section::-webkit-scrollbar {
+          height: 6px;
+        }
+        
+        .verification-section::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 6px;
+        }
+        
+        .verification-section::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 6px;
+        }
+        
+        .verification-section::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+      `}</style>
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8 overflow-x-auto">
         {/* Profile Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center flex-shrink-0">
                 {isBusinessCustomer ? (
-                  <BuildingOfficeIcon className="w-8 h-8 text-blue-600" />
+                  <BuildingOfficeIcon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
                 ) : (
-                  <UserCircleIcon className="w-8 h-8 text-blue-600" />
+                  <UserCircleIcon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
                 )}
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                   {displayName}
                 </h1>
-                <p className="text-gray-600">{displayEmail}</p>
-                <div className="flex items-center mt-2 space-x-4">
+                <p className="text-gray-600 text-sm sm:text-base truncate">{displayEmail}</p>
+                <div className="flex flex-wrap items-center mt-2 gap-2">
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                     isBusinessCustomer 
                       ? 'bg-purple-100 text-purple-800'
@@ -168,7 +211,7 @@ const ProfileWorking = () => {
             </div>
 
             {/* Overall KYC Status */}
-            <div className="text-right">
+            <div className="text-left sm:text-right flex-shrink-0">
               <div className="flex items-center space-x-2 mb-2">
                 {overallStatus.status === 'completed' ? (
                   <CheckCircleIcon className="w-5 h-5 text-green-600" />
@@ -197,16 +240,16 @@ const ProfileWorking = () => {
           </div>
 
           {/* Basic Info Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
+            <div className="min-w-0">
               <p className="text-sm text-gray-600">Customer Name</p>
-              <p className="font-medium text-gray-900">{firstName + ' ' + lastName}</p>
+              <p className="font-medium text-gray-900 break-words">{firstName + ' ' + lastName}</p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm text-gray-600">Phone Number</p>
-              <p className="font-medium text-gray-900">{displayPhone}</p>
+              <p className="font-medium text-gray-900 break-all">{displayPhone}</p>
             </div>
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <p className="text-sm text-gray-600">KYC Status</p>
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                 displayKycStatus === 'Verified' 
@@ -223,9 +266,9 @@ const ProfileWorking = () => {
           {/* Wallet Balance */}
           {displayBalance && (
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-3 sm:p-4">
                 <p className="text-sm text-gray-600 mb-1">Wallet Balance</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {formatCurrency(displayBalance)}
                 </p>
               </div>
@@ -235,41 +278,43 @@ const ProfileWorking = () => {
 
         {/* Verification Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
               {isBusinessCustomer ? 'Business Verification' : 'Identity Verification'}
             </h2>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">
               Complete your verification process to unlock all features and increase transaction limits.
             </p>
           </div>
 
-          <div className="p-6">
-            {isBusinessCustomer ? (
-              <BusinessVerification
-                customerId={profileData?.customer?.id}
-                customerCode={displayCode}
-                verifications={profileData?.verifications || verifications || []}
-                documents={profileData?.customer.documents || []}
-                onVerificationSuccess={handleVerificationSuccess}
-                onDocumentUploadSuccess={handleDocumentUploadSuccess}
-              />
-            ) : (
-              <IndividualVerification
-                customerId={profileData?.id}
-                customerCode={displayCode}
-                verifications={profileData?.verifications || verifications || []}
-                onVerificationSuccess={handleVerificationSuccess}
-              />
-            )}
+          <div className="p-4 sm:p-6 w-full overflow-x-auto verification-section">
+            <div className="w-full space-y-4 sm:space-y-6">
+              {isBusinessCustomer ? (
+                <BusinessVerification
+                  customerId={profileData?.customer?.id}
+                  customerCode={displayCode}
+                  verifications={profileData?.verifications || verifications || []}
+                  documents={profileData?.customer.documents || []}
+                  onVerificationSuccess={handleVerificationSuccess}
+                  onDocumentUploadSuccess={handleDocumentUploadSuccess}
+                />
+              ) : (
+                <IndividualVerification
+                  customerId={profileData?.id}
+                  customerCode={displayCode}
+                  verifications={profileData?.verifications || verifications || []}
+                  onVerificationSuccess={handleVerificationSuccess}
+                />
+              )}
+            </div>
           </div>
         </div>
 
         {/* Interest Information (if available) */}
         {profileData?.interest && (
-          <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="mt-6 sm:mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Interest Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <p className="text-sm text-gray-600">Period Start</p>
                 <p className="font-medium text-gray-900">
@@ -294,6 +339,7 @@ const ProfileWorking = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

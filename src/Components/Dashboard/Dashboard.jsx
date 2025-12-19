@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   HomeIcon,
   CreditCardIcon,
@@ -191,11 +191,13 @@ const Dashboard = () => {
           {/* User section */}
           <div className="px-4 py-4 border-t border-slate-200">
             <div className="flex items-center space-x-3 px-3 py-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 font-medium text-sm">
-                  {userFirstName.charAt(0).toUpperCase()}
-                </span>
-              </div>
+              <Link to="/dashboard/profile">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-medium text-sm">
+                    {userFirstName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              </Link>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-slate-900 truncate">
                   {userFirstName}
@@ -244,11 +246,6 @@ const Dashboard = () => {
             <div className="flex items-center space-x-4">
               {/* Account type toggle */}
 
-              {/* Notifications */}
-              <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                <BellIcon className="h-6 w-6" />
-              </button>
-
               {/* User profile */}
               <div className="flex items-center space-x-3">
                 <div className="hidden md:block text-right">
@@ -257,11 +254,13 @@ const Dashboard = () => {
                   </div>
                   <div className="text-xs text-slate-500">{userType}</div>
                 </div>
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-medium">
-                    {userFirstName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <Link to="/dashboard/profile">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 font-medium">
+                      {userFirstName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                </Link>
               </div>
             </div>
           </div>

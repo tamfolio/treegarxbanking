@@ -17,6 +17,7 @@ import StatementDownloadModal from "../Modals/StatementDownloadModal";
 import PayoutModal from "../Modals/PayoutModal";
 import SetPinModal from "../Modals/SetPinModal";
 import TransactionLimits from "./TransactionLimit";
+import VerificationRequiredModal from "../Modals/VerificationRequiredModal";
 
 const Overview = () => {
   const [showStatementModal, setShowStatementModal] = useState(false);
@@ -24,6 +25,7 @@ const Overview = () => {
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [copiedField, setCopiedField] = useState("");
   const [showSetPinModal, setShowSetPinModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   // Get profile data from global state
   const {
@@ -52,6 +54,26 @@ const Overview = () => {
     // Profile will be refetched automatically by the mutation
   };
 
+  const checkVerificationStatus = () => {
+    if (!verifications || verifications.length === 0) return false;
+
+    const bvnVerification = verifications.find((v) => v.type === "bvn");
+    const ninVerification = verifications.find((v) => v.type === "nin");
+
+    const bvnCompleted = bvnVerification?.isCompleted || false;
+    const ninCompleted = ninVerification?.isCompleted || false;
+
+    return bvnCompleted && ninCompleted;
+  };
+
+  const handleSendMoney = () => {
+    if (checkVerificationStatus()) {
+      setShowPayoutModal(true);
+    } else {
+      setShowVerificationModal(true);
+    }
+  };
+
   // Get recent transactions (last 5)
   const { data: transactionsData, isPending: transactionsLoading } =
     useTransactions({
@@ -61,9 +83,10 @@ const Overview = () => {
 
   // Fallback user data
   const fallbackUserData = JSON.parse(localStorage.getItem("userData") || "{}");
-  const userFirstName = customerTypeCode === 'Business' 
-  ? (businessName || fallbackUserData.businessName || "Business") 
-  : (firstName || fallbackUserData.firstName || "User");
+  const userFirstName =
+    customerTypeCode === "Business"
+      ? businessName || fallbackUserData.businessName || "Business"
+      : firstName || fallbackUserData.firstName || "User";
 
   // Get additional profile data
   const profileData = profile?.data || fallbackUserData;
@@ -213,7 +236,7 @@ const Overview = () => {
       name: "Send Money",
       icon: PaperAirplaneIcon,
       color: "bg-blue-50 text-blue-600",
-      onClick: () => setShowPayoutModal(true),
+      onClick: handleSendMoney,
     },
     {
       name: "Receive Money",
@@ -542,6 +565,13 @@ const Overview = () => {
           // Refresh transactions when payout is successful
           console.log("Payout successful - refreshing data");
         }}
+      />
+
+      <VerificationRequiredModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        verifications={verifications}
+        customerType={customerType}
       />
     </div>
   );
