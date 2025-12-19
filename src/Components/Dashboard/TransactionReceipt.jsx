@@ -85,7 +85,7 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
   const StatusIcon = statusInfo.icon;
   const dateTime = formatReceiptDate(transaction.createdAt);
 
-  // Download as PDF function
+  // Download as PDF function - FIXED
   const downloadReceipt = async () => {
     try {
       // Create a new window for the receipt
@@ -118,23 +118,45 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
               page-break-inside: avoid;
             }
             .header { 
-              background: #3b82f6 !important;
-              background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-              color: white !important; 
+              background: #3b82f6;
+              background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+              color: white; 
               padding: 20px; 
               text-align: center;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .header h1 {
-              color: white !important;
+              color: white;
               font-size: 20px;
               font-weight: 700;
               margin-bottom: 4px;
             }
             .header p {
-              color: rgba(255,255,255,0.9) !important;
+              color: rgba(255,255,255,0.9);
               font-size: 12px;
+            }
+            .logo-container {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-bottom: 16px;
+            }
+            .logo {
+              width: 40px;
+              height: 40px;
+              background: linear-gradient(135deg, #2563eb, #1d4ed8);
+              border-radius: 12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+              margin-right: 12px;
+            }
+            .brand-name {
+              font-size: 24px;
+              font-weight: 700;
+              color: white;
             }
             .status-success { color: #10b981; }
             .status-failed { color: #ef4444; }
@@ -218,16 +240,15 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
                 border-radius: 0;
                 page-break-inside: avoid;
               }
-              .no-print { display: none !important; }
+              .no-print { display: none; }
               .header {
-                background: #3b82f6 !important;
-                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                background: #3b82f6;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
               * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
               }
             }
             @page {
@@ -241,11 +262,11 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
             <!-- Header -->
             <div class="header">
               <!-- Logo Section -->
-              <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-right: 12px;">
-                  <span style="color: white; font-weight: 700; font-size: 20px;">TX</span>
+              <div class="logo-container">
+                <div class="logo">
+                  <img src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766038036/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw.png" alt="Nexus" style="width: 32px; height: 32px; border-radius: 6px;" />
                 </div>
-                <div style="font-size: 24px; font-weight: 700; color: white;">Treegar X</div>
+                <div class="brand-name">Nexus</div>
               </div>
               <h1>Transaction Receipt</h1>
             </div>
@@ -311,17 +332,11 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
 
             <!-- References -->
             <div class="section">
-              <h3>References</h3>
+              <h3>Reference</h3>
               <div class="detail-row">
                 <span class="label">Transaction Reference</span>
                 <span class="value reference">${transaction.reference}</span>
               </div>
-              ${transaction.providerReference ? `
-              <div class="detail-row">
-                <span class="label">Provider Reference</span>
-                <span class="value reference">${transaction.providerReference}</span>
-              </div>
-              ` : ''}
             </div>
 
             <!-- Description -->
@@ -365,29 +380,29 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
     }
   };
 
-  // Share receipt function - now generates and shares an image
+  // Share receipt function - FIXED
   const shareReceipt = async () => {
     try {
       // Create a temporary div with the receipt content
       const receiptDiv = document.createElement('div');
       receiptDiv.style.position = 'absolute';
       receiptDiv.style.left = '-9999px';
-      receiptDiv.style.width = '420px'; // Increased width
+      receiptDiv.style.width = '420px';
       receiptDiv.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif';
       receiptDiv.style.backgroundColor = 'white';
       receiptDiv.style.border = '1px solid #e5e7eb';
       receiptDiv.style.borderRadius = '12px';
-      receiptDiv.style.overflow = 'visible'; // Changed from hidden to visible
+      receiptDiv.style.overflow = 'visible';
       
       receiptDiv.innerHTML = `
         <!-- Header with Logo -->
         <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 24px 20px; text-align: center; border-top-left-radius: 12px; border-top-right-radius: 12px;">
           <!-- Logo -->
           <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-right: 12px;">
-              <span style="color: white; font-weight: 700; font-size: 20px;">TX</span>
+            <div style="width: 48px; height: 48px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); margin-right: 12px; padding: 4px;">
+                <img src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766038036/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw.png" alt="Nexus" style="width: 40px; height: 40px; border-radius: 8px;" />
             </div>
-            <div style="font-size: 24px; font-weight: 700; color: white;">Treegar X</div>
+            <div style="font-size: 24px; font-weight: 700; color: white;">Nexus</div>
           </div>
           <h1 style="font-size: 20px; font-weight: 700; margin: 0 0 6px 0; line-height: 1.2; color: white;">Transaction Receipt</h1>
         </div>
@@ -493,7 +508,7 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
       if (window.html2canvas) {
         const canvas = await window.html2canvas(receiptDiv, {
           backgroundColor: '#ffffff',
-          scale: 2, // Reduced scale for better compatibility
+          scale: 2,
           useCORS: true,
           logging: false,
           scrollX: 0,
@@ -576,10 +591,14 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
             <div className="text-center text-white">
               {/* Logo */}
               <div className="flex items-center justify-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg mr-3">
-                  <span className="text-white font-bold text-xl">TX</span>
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg mr-3 p-1">
+                  <img 
+                    src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766038036/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw.png" 
+                    alt="Nexus" 
+                    className="w-10 h-10 rounded-lg"
+                  />
                 </div>
-                <div className="text-2xl font-bold text-white">Treegar X</div>
+                <div className="text-2xl font-bold text-white">Nexus</div>
               </div>
               <h2 className="text-xl font-bold mb-1">Transaction Receipt</h2>
             </div>
@@ -652,9 +671,9 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
               </div>
             )}
 
-            {/* References */}
+            {/* References - REMOVED PROVIDER REFERENCE */}
             <div className="bg-slate-50 rounded-xl p-4">
-              <h3 className="font-semibold text-slate-900 mb-3 text-sm">References</h3>
+              <h3 className="font-semibold text-slate-900 mb-3 text-sm">Reference</h3>
               <div className="space-y-2 text-sm">
                 <div>
                   <div className="text-slate-600 mb-1">Transaction Reference</div>
@@ -662,14 +681,6 @@ const TransactionReceipt = ({ transaction, isOpen, onClose, companyInfo }) => {
                     {transaction.reference}
                   </div>
                 </div>
-                {transaction.providerReference && (
-                  <div>
-                    <div className="text-slate-600 mb-1">Provider Reference</div>
-                    <div className="font-mono text-xs text-slate-900 bg-white p-2 rounded border break-all">
-                      {transaction.providerReference}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
