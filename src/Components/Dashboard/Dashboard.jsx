@@ -137,18 +137,12 @@ const Dashboard = () => {
         <div className="flex flex-col h-full">
           {/* Logo and close button */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center justify-center w-full">
               <img
-                src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766038036/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw.png"
-                alt=""
-                className="w-[100px] h-[80px]"
+                src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766218299/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw_erdj10.png"
+                alt="Nexus Logo"
+                className="w-[100px] object-contain" // object-contain preserves aspect ratio
               />
-              <div>
-                <div className="text-md font-semibold text-slate-900">
-                  Nexus
-                </div>
-                <div className="text-xs text-slate-500">Online Banking</div>
-              </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
