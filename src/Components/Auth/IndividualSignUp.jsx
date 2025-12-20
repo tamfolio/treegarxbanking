@@ -10,6 +10,7 @@ import useSimpleIndividualOnboarding from "../../hooks/useSimpleIndividualOnboar
 const IndividualSignUp = ({ onBack }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
   const [formData, setFormData] = useState({
@@ -310,20 +311,33 @@ const IndividualSignUp = ({ onBack }) => {
               >
                 Confirm Password *
               </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder="Confirm your password"
-                className={`w-full px-4 py-3 border-2 rounded-xl bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all duration-200 ${
-                  errors.confirmPassword
-                    ? "border-red-300 focus:border-red-500 focus:ring-red-500/10"
-                    : "border-slate-200 focus:border-blue-600 focus:ring-blue-600/10"
-                }`}
-              />
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm your password"
+                  className={`w-full px-4 py-3 pr-12 border-2 rounded-xl bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all duration-200 ${
+                    errors.confirmPassword
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10"
+                      : "border-slate-200 focus:border-blue-600 focus:ring-blue-600/10"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeSlashIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="mt-2 text-sm text-red-600">
                   {errors.confirmPassword}
