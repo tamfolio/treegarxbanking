@@ -12,12 +12,14 @@ import {
 } from "../../hooks/useTransactions";
 import { toast } from "react-hot-toast";
 import PinVerificationModal from "../Modals/PinVerificationModal";
+import OtpVerificationModal from "../Modals/OtpVerificationModal";
 
 const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
   const [bulkItems, setBulkItems] = useState([]);
   const [groupKey, setGroupKey] = useState("");
   const [errors, setErrors] = useState({});
   const [showPinModal, setShowPinModal] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
   const [pendingTransactionData, setPendingTransactionData] = useState(null);
 
   const { data: banksData, isLoading: banksLoading } = useBanks();
@@ -305,51 +307,87 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Form submission - now shows PIN modal instead of direct submission
-// Form submission - now shows PIN modal instead of direct submission
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  // Form submission - now shows OTP modal first
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  // Store transaction data and show PIN modal
-  const bulkData = {
-    groupKey: groupKey || `BULK-${Date.now()}`,
-    items: bulkItems.map((item) => ({
-      bankId: item.bankId,
-      bankName: item.bankName || item.selectedBank?.bankName || 'Unknown Bank', // Add this
-      amount: item.amount,
-      narration: item.narration,
-      accountNumber: item.accountNumber,
-      beneficiaryName: item.beneficiaryName,
-      saveBeneficiary: item.saveBeneficiary,
-    })),
+    // Store transaction data and show OTP modal
+    const bulkData = {
+      groupKey: groupKey || `BULK-${Date.now()}`,
+      items: bulkItems.map((item) => ({
+        bankId: item.bankId,
+        bankName: item.bankName || item.selectedBank?.bankName || 'Unknown Bank',
+        amount: item.amount,
+        narration: item.narration,
+        accountNumber: item.accountNumber,
+        beneficiaryName: item.beneficiaryName,
+        saveBeneficiary: item.saveBeneficiary,
+      })),
+    };
+
+    setPendingTransactionData(bulkData);
+    setShowOtpModal(true);
   };
 
-  setPendingTransactionData(bulkData);
-  setShowPinModal(true);
-};
+  // Handle OTP verification success - store OTP data and show PIN modal
+  const handleOtpSuccess = ({ otpCode, otpChallengeId }) => {
+    setPendingTransactionData((prev) => ({
+      ...prev,
+      otpCode,
+      otpChallengeId,
+    }));
+    
+    setShowOtpModal(false);
+    setShowPinModal(true);
+  };
 
-  // Handle PIN verification success
+  // Handle PIN verification success - this is where the actual bulk payout happens
   const handlePinVerified = async ({ pin, transactionData }) => {
+    console.log("🔐 PIN Verified - Bulk Transaction Data:", {
+      ...transactionData,
+      pin: "***hidden***"
+    });
+
     try {
       const payloadData = {
         ...transactionData,
-        pin: pin
+        pin: pin,
       };
 
+      console.log("📤 About to call bulk payout with payload:", {
+        ...payloadData,
+        pin: "***hidden***",
+        items: payloadData.items?.length ? `${payloadData.items.length} items` : 'no items'
+      });
+
       const result = await bulkPayoutMutation.mutateAsync(payloadData);
+      
+      console.log("✅ Bulk payout completed successfully:", result);
+      
       if (result.success) {
         toast.success(
           `Bulk transfer completed! ${bulkItems.length} recipients processed.`
         );
-        onSuccess(result.data);
+        setShowPinModal(false);
+        onSuccess?.(result.data);
       } else {
+        console.warn("⚠️ Bulk payout returned unsuccessful:", result);
         toast.error(result.message || "Bulk transfer failed");
         setErrors({ submit: result.message || "Bulk payout failed" });
       }
     } catch (error) {
-      toast.error(error.message || "Failed to process bulk transfer");
+      console.error("❌ Bulk payout error caught in handlePinVerified:", error);
+      
+      // Check if this is an auth error that might cause logout
+      if (error.response?.status === 401) {
+        console.error("🔐 AUTH ERROR - This will likely cause logout");
+        toast.error("Session expired. Please log in again.");
+      } else {
+        toast.error(error.message || "Failed to process bulk transfer");
+      }
+      
       setErrors({ submit: error.message || "Failed to process bulk transfer" });
       
       // Re-throw error to be handled by the PIN modal
@@ -693,6 +731,14 @@ const handleSubmit = async (e) => {
         onSuccess={handlePinVerified}
         transactionData={pendingTransactionData}
         transactionType="bulk"
+      />
+
+      {/* OTP Verification Modal */}
+      <OtpVerificationModal
+        isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        onSuccess={handleOtpSuccess}
+        purpose="CreateTransfer"
       />
     </>
   );

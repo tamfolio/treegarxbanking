@@ -13,6 +13,7 @@ import {
   MagnifyingGlassIcon,
   Bars3Icon,
   XMarkIcon,
+  ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeIconSolid,
@@ -23,6 +24,7 @@ import {
   UserGroupIcon as UserGroupIconSolid,
   WrenchScrewdriverIcon as WrenchScrewdriverIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid,
+  ClipboardDocumentCheckIcon as ClipboardDocumentCheckIconSolid
 } from "@heroicons/react/24/solid";
 import { useProfileData } from "../../hooks/useProfile";
 import { getTimeBasedGreeting } from "../../utils/timeGreeting";
@@ -31,6 +33,8 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const userData = JSON.parse(localStorage.getItem("userData"));
+  console.log('userData',userData.actor)
 
   // Get profile data from global state
   const {
@@ -84,6 +88,13 @@ const Dashboard = () => {
       iconSolid: UserGroupIconSolid,
     },
     {
+      name: "Approvals", 
+      href: "/dashboard/approvals",
+      icon: ClipboardDocumentCheckIcon,
+      iconSolid: ClipboardDocumentCheckIconSolid,
+      badge: 5,
+    },
+    {
       name: "Profile",
       href: "/dashboard/profile",
       icon: Cog6ToothIcon,
@@ -99,14 +110,25 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    // Clear all stored data
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("userData");
-    sessionStorage.clear();
-
-    // Navigate to login
-    navigate("/login");
+    try {
+      // Nuclear option - clear everything
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Clear cookies if any
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+  
+      console.log("🔐 Complete logout - all storage cleared");
+      navigate("/login");
+      
+    } catch (error) {
+      console.error("Error during logout:", error);
+      navigate("/login");
+    }
   };
 
   const handleNavigation = (href) => {

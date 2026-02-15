@@ -23,6 +23,14 @@ export const transactionsService = {
     return response.data;
   },
 
+  // Request transfer OTP
+  requestTransferOtp: async (purpose = "transfer") => {
+    const response = await apiClient.post("/customer/transfers/otp/request", {
+      purpose,
+    });
+    return response.data;
+  },
+
   // Get banks list
   getBanks: async () => {
     const response = await apiClient.get("/customer/transfers/banks");
@@ -49,15 +57,27 @@ export const transactionsService = {
 
   // Make payout
   payout: async (payoutData) => {
-    const response = await apiClient.post("/customer/transfers/payout", {
+    const payload = {
       bankId: parseInt(payoutData.bankId),
       amount: parseFloat(payoutData.amount),
       narration: payoutData.narration,
       accountNumber: payoutData.accountNumber,
       beneficiaryName: payoutData.beneficiaryName,
       saveBeneficiary: payoutData.saveBeneficiary || false,
-      pin: payoutData.pin, // Add PIN to payload
-    });
+      pin: payoutData.pin,
+    };
+  
+    // Add OTP only if it exists
+    if (payoutData.otpCode) {
+      payload.otpCode = payoutData.otpCode;
+      payload.otpChallengeId = payoutData.otpChallengeId;
+    }
+  
+    const response = await apiClient.post(
+      "/customer/transfers/payout",
+      payload
+    );
+  
     return response.data;
   },
 
@@ -71,11 +91,13 @@ export const transactionsService = {
     return response.data;
   },
 
-  // Make bulk payout
+  // Make bulk payout - CORRECTED: PIN and OTP both at root level
   bulkPayout: async (bulkPayoutData) => {
-    const response = await apiClient.post("/customer/transfers/payout/bulk", {
+    const payload = {
       groupKey: bulkPayoutData.groupKey,
-      pin: bulkPayoutData.pin, // Add PIN to payload
+      pin: bulkPayoutData.pin, // PIN at root level
+      otpCode: bulkPayoutData.otpCode, // OTP at root level
+      otpChallengeId: bulkPayoutData.otpChallengeId, // Challenge ID at root level
       items: bulkPayoutData.items.map((item) => ({
         bankId: parseInt(item.bankId),
         amount: parseFloat(item.amount),
@@ -83,8 +105,11 @@ export const transactionsService = {
         accountNumber: item.accountNumber,
         beneficiaryName: item.beneficiaryName,
         saveBeneficiary: item.saveBeneficiary || true,
+        // NO OTP fields in items - they go at root level
       })),
-    });
+    };
+
+    const response = await apiClient.post("/customer/transfers/payout/bulk", payload);
     return response.data;
   },
 

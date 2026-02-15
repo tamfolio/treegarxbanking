@@ -10,6 +10,7 @@ import {
 } from "../../hooks/useTransactions";
 import { toast } from "react-hot-toast";
 import PinVerificationModal from "../Modals/PinVerificationModal";
+import OtpVerificationModal from "../Modals/OtpVerificationModal";
 
 const SingleTransferForm = ({
   prefilledData = {},
@@ -25,6 +26,7 @@ const SingleTransferForm = ({
   const [resolvedAccount, setResolvedAccount] = useState(null);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pendingTransactionData, setPendingTransactionData] = useState(null);
+  const [showOtpModal, setShowOtpModal] = useState(false);
 
   const [formData, setFormData] = useState({
     bankId: "",
@@ -179,7 +181,7 @@ const SingleTransferForm = ({
     try {
       const result = await resolveAccountMutation.mutateAsync({
         bankId: formData.bankId,
-        accountNumber: formData.accountNumber
+        accountNumber: formData.accountNumber,
       });
 
       if (result.success) {
@@ -263,33 +265,46 @@ const SingleTransferForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Form submission - now shows PIN modal instead of direct submission
+  // Form submission - shows OTP modal first
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!validateForm()) return;
-  
-    // Store transaction data and show PIN modal
+
+    // Store transaction data and show OTP modal
     setPendingTransactionData({
       ...formData,
       beneficiaryName: resolvedAccount.accountName,
-      bankName: selectedBank?.bankName || 'Unknown Bank'  // Add this line
+      bankName: selectedBank?.bankName || "Unknown Bank",
     });
+    setShowOtpModal(true);
+  };
+
+  // Handle OTP verification success - just store OTP data and show PIN modal
+  const handleOtpSuccess = ({ otpCode, otpChallengeId }) => {
+    setPendingTransactionData((prev) => ({
+      ...prev,
+      otpCode,
+      otpChallengeId,
+    }));
+    
+    setShowOtpModal(false);
     setShowPinModal(true);
   };
 
-  // Handle PIN verification success
+  // Handle PIN verification success - this is where the actual payout happens
   const handlePinVerified = async ({ pin, transactionData }) => {
     try {
       const payloadData = {
         ...transactionData,
-        pin: pin
+        pin: pin,
       };
 
       const result = await payoutMutation.mutateAsync(payloadData);
       if (result.success) {
         toast.success("Transfer completed successfully!");
-        onSuccess(result.data);
+        setShowPinModal(false);
+        onSuccess?.(result.data);
       } else {
         toast.error(result.message || "Transfer failed");
         setErrors({ submit: result.message || "Payout failed" });
@@ -297,7 +312,7 @@ const SingleTransferForm = ({
     } catch (error) {
       toast.error(error.message || "Failed to process transfer");
       setErrors({ submit: error.message || "Failed to process transfer" });
-      
+
       // Re-throw error to be handled by the PIN modal
       throw error;
     }
@@ -532,6 +547,14 @@ const SingleTransferForm = ({
         onSuccess={handlePinVerified}
         transactionData={pendingTransactionData}
         transactionType="transfer"
+      />
+
+      {/* OTP Verification Modal */}
+      <OtpVerificationModal
+        isOpen={showOtpModal}
+        onClose={() => setShowOtpModal(false)}
+        onSuccess={handleOtpSuccess}
+        purpose="CreateTransfer"
       />
     </>
   );

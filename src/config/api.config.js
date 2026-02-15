@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
     // Base URLs
-    BASE_URL: 'https://treegar-accounts-api.treegar.com:8443/api',
+    BASE_URL: 'https://treegar-customer-api.treegar.com:8445/api',
     WEBSOCKET_URL: 'wss://api.treegarx.com',
     
     // Timeouts

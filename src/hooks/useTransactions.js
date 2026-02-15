@@ -86,6 +86,14 @@ export const usePayout = () => {
   });
 };
 
+// Hook for requesting transfer OTP
+export const useRequestTransferOtp = () => {
+  return useMutation({
+    mutationFn: (purpose) =>
+      transactionsService.requestTransferOtp(purpose),
+  });
+};
+
 // Hook for bulk payout
 export const useBulkPayout = () => {
   const queryClient = useQueryClient();
@@ -100,5 +108,7 @@ export const useBulkPayout = () => {
     },
   });
 };
+
+
 
 export default useTransactions;
