@@ -95,9 +95,9 @@ export const transactionsService = {
   bulkPayout: async (bulkPayoutData) => {
     const payload = {
       groupKey: bulkPayoutData.groupKey,
-      pin: bulkPayoutData.pin, // PIN at root level
-      otpCode: bulkPayoutData.otpCode, // OTP at root level
-      otpChallengeId: bulkPayoutData.otpChallengeId, // Challenge ID at root level
+      pin: bulkPayoutData.pin,
+      otpChallengeId: bulkPayoutData.otpChallengeId, // Challenge ID before otpCode
+      otpCode: bulkPayoutData.otpCode, // OTP code after challenge ID
       items: bulkPayoutData.items.map((item) => ({
         bankId: parseInt(item.bankId),
         amount: parseFloat(item.amount),
@@ -105,7 +105,6 @@ export const transactionsService = {
         accountNumber: item.accountNumber,
         beneficiaryName: item.beneficiaryName,
         saveBeneficiary: item.saveBeneficiary || true,
-        // NO OTP fields in items - they go at root level
       })),
     };
 

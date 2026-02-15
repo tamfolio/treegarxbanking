@@ -247,9 +247,6 @@ const Approvals = () => {
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-400 mt-1">
-                            by {transaction.createdByRole}
-                          </div>
                         </div>
                       </td>
 
@@ -278,11 +275,6 @@ const Approvals = () => {
                       {/* Status */}
                       <td className="px-6 py-4">
                         {getStatusBadge(transaction.status)}
-                        {transaction.responseMessage && (
-                          <div className="text-xs text-slate-500 mt-1">
-                            {transaction.responseMessage}
-                          </div>
-                        )}
                       </td>
 
                       {/* Created Date */}

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../api/client';
 
 // Profile API service
@@ -7,6 +7,29 @@ export const profileService = {
   getProfile: async () => {
     const response = await apiClient.get('/customer/auth/profile');
     return response.data;
+  },
+
+  // Change PIN
+  changePIN: async (pinData) => {
+    console.log("🔄 Changing PIN:", {
+      oldPin: pinData.oldPin ? "***provided***" : "***missing***",
+      newPin: pinData.newPin ? "***provided***" : "***missing***",
+      confirmPin: pinData.confirmPin ? "***provided***" : "***missing***"
+    });
+
+    try {
+      const response = await apiClient.post('/customer/auth/pin/change', {
+        oldPin: pinData.oldPin,
+        newPin: pinData.newPin,
+        confirmPin: pinData.confirmPin
+      });
+
+      console.log("✅ PIN changed successfully:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("❌ PIN change failed:", error);
+      throw error;
+    }
   },
 };
 
@@ -20,6 +43,20 @@ export const useProfile = (options = {}) => {
     retry: 2,
     refetchOnWindowFocus: false,
     ...options,
+  });
+};
+
+// Hook to change PIN
+export const useChangePIN = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: profileService.changePIN,
+    onSuccess: () => {
+      // Optionally refresh profile data after PIN change
+      // queryClient.invalidateQueries(['profile']);
+      console.log("PIN change successful - no profile refresh needed");
+    },
   });
 };
 

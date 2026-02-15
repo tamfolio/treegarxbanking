@@ -5,12 +5,16 @@ import {
   BuildingOfficeIcon, 
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  ClockIcon
+  ClockIcon,
+  KeyIcon
 } from '@heroicons/react/24/outline';
 import IndividualVerification from '../IndividualVerification';
 import BusinessVerification from '../BusinessVerification';
+import ChangePINModal from '../Modals/ChangePINModal';
 
 const ProfileWorking = () => {
+  const [showChangePINModal, setShowChangePINModal] = useState(false);
+
   // Use EXACT same pattern as Overview
   const { 
     firstName, 
@@ -210,30 +214,43 @@ const ProfileWorking = () => {
               </div>
             </div>
 
-            {/* Overall KYC Status */}
+            {/* Overall KYC Status and PIN Change Button */}
             <div className="text-left sm:text-right flex-shrink-0">
-              <div className="flex items-center space-x-2 mb-2">
-                {overallStatus.status === 'completed' ? (
-                  <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                ) : overallStatus.status === 'pending' ? (
-                  <ClockIcon className="w-5 h-5 text-yellow-600" />
-                ) : (
-                  <ExclamationTriangleIcon className="w-5 h-5 text-orange-600" />
-                )}
-                <span className={`text-sm font-medium ${
-                  overallStatus.status === 'completed' 
-                    ? 'text-green-600'
-                    : overallStatus.status === 'pending'
-                    ? 'text-yellow-600'
-                    : 'text-orange-600'
-                }`}>
-                  {overallStatus.status === 'completed' 
-                    ? 'Fully Verified'
-                    : overallStatus.status === 'pending'
-                    ? 'Under Review'
-                    : 'Verification Required'
-                  }
-                </span>
+              <div className="flex items-center justify-between sm:justify-end space-x-3 mb-2">
+                {/* PIN Change Button */}
+                <button
+                  onClick={() => setShowChangePINModal(true)}
+                  className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-lg transition-colors"
+                  title="Change PIN"
+                >
+                  <KeyIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">Change PIN</span>
+                </button>
+
+                {/* KYC Status */}
+                <div className="flex items-center space-x-2">
+                  {overallStatus.status === 'completed' ? (
+                    <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                  ) : overallStatus.status === 'pending' ? (
+                    <ClockIcon className="w-5 h-5 text-yellow-600" />
+                  ) : (
+                    <ExclamationTriangleIcon className="w-5 h-5 text-orange-600" />
+                  )}
+                  <span className={`text-sm font-medium ${
+                    overallStatus.status === 'completed' 
+                      ? 'text-green-600'
+                      : overallStatus.status === 'pending'
+                      ? 'text-yellow-600'
+                      : 'text-orange-600'
+                  }`}>
+                    {overallStatus.status === 'completed' 
+                      ? 'Fully Verified'
+                      : overallStatus.status === 'pending'
+                      ? 'Under Review'
+                      : 'Verification Required'
+                    }
+                  </span>
+                </div>
               </div>
               <p className="text-xs text-gray-500">{overallStatus.message}</p>
             </div>
@@ -338,6 +355,12 @@ const ProfileWorking = () => {
           </div>
         )}
       </div>
+
+      {/* Change PIN Modal */}
+      <ChangePINModal
+        isOpen={showChangePINModal}
+        onClose={() => setShowChangePINModal(false)}
+      />
     </div>
     </>
   );
