@@ -80,7 +80,7 @@ const CreateCheckerModal = ({ isOpen, onClose }) => {
         </button>
 
         <h2 className="text-xl font-semibold text-slate-800 mb-6">
-          Create Checker
+          Create Initiator
         </h2>
 
         {/* First Name */}
@@ -148,7 +148,7 @@ const CreateCheckerModal = ({ isOpen, onClose }) => {
             disabled={isLoading}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
           >
-            {isLoading ? "Creating..." : "Create Checker"}
+            {isLoading ? "Creating..." : "Create Initiator"}
           </button>
         </div>
       </div>

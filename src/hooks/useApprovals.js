@@ -28,7 +28,7 @@ export const useBusinessUsers = (options = {}) => {
   });
 };
 
-// Create checker
+// Create Initiator
 export const useCreateChecker = () => {
   const queryClient = useQueryClient();
 

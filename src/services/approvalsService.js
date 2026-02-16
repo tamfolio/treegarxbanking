@@ -30,7 +30,7 @@ export const approvalsService = {
     return response.data;
   },
 
-  // Create checker
+  // Create Initiator
   createChecker: async (checkerData) => {
     const response = await apiClient.post("/customer/auth/business-users", {
       email: checkerData.email,

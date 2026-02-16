@@ -1,14 +1,18 @@
 import React, { useState } from "react";
-import { 
-  ArrowPathIcon, 
+import {
+  ArrowPathIcon,
   PlusIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
   UserGroupIcon,
-  EyeIcon
+  EyeIcon,
 } from "@heroicons/react/24/outline";
-import { useTransactionQueue, useApproveTransaction, useRejectTransaction } from "../../hooks/useApprovals";
+import {
+  useTransactionQueue,
+  useApproveTransaction,
+  useRejectTransaction,
+} from "../../hooks/useApprovals";
 import CreateCheckerModal from "../Modals/CreateCheckerModal";
 import BusinessUsersModal from "../Modals/BusinessUsersModal";
 import OtpVerificationModal from "../Modals/OtpVerificationModal";
@@ -27,32 +31,41 @@ const Approvals = () => {
   const actor = userData?.actor;
 
   const canCreateChecker = actor?.type === "Customer";
-  const canApproveTransactions = actor?.role === "Checker" || actor?.role === "Admin" || actor.type === 'Customer';
+  const canApproveTransactions =
+    actor?.role === "Checker" ||
+    actor?.role === "Admin" ||
+    actor.type === "Customer";
 
   const { data, isLoading, refetch } = useTransactionQueue();
   const approveTransactionMutation = useApproveTransaction();
   const rejectTransactionMutation = useRejectTransaction();
 
   const transactions = data?.data || [];
-  const pendingTransactions = transactions.filter(t => t.status === "Pending");
+  const pendingTransactions = transactions.filter(
+    (t) => t.status === "Pending"
+  );
 
   const getStatusBadge = (status) => {
     const styles = {
       Pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
       Approved: "bg-green-100 text-green-700 border-green-200",
       Rejected: "bg-red-100 text-red-700 border-red-200",
-      Processing: "bg-blue-100 text-blue-700 border-blue-200"
+      Processing: "bg-blue-100 text-blue-700 border-blue-200",
     };
 
     const icons = {
       Pending: <ClockIcon className="w-3 h-3" />,
       Approved: <CheckCircleIcon className="w-3 h-3" />,
       Rejected: <XCircleIcon className="w-3 h-3" />,
-      Processing: <ArrowPathIcon className="w-3 h-3 animate-spin" />
+      Processing: <ArrowPathIcon className="w-3 h-3 animate-spin" />,
     };
 
     return (
-      <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-medium border ${styles[status] || styles.Pending}`}>
+      <span
+        className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-medium border ${
+          styles[status] || styles.Pending
+        }`}
+      >
         {icons[status]}
         <span>{status}</span>
       </span>
@@ -60,20 +73,20 @@ const Approvals = () => {
   };
 
   const formatCurrency = (amount, currency = "NGN") => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
       currency: currency,
-      minimumFractionDigits: 2
+      minimumFractionDigits: 2,
     }).format(amount);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -92,9 +105,9 @@ const Approvals = () => {
       await approveTransactionMutation.mutateAsync({
         transactionId: selectedTransaction.id,
         otpCode,
-        otpChallengeId
+        otpChallengeId,
       });
-      
+
       toast.success("Transaction approved successfully!");
       setShowOtpModal(false);
       setSelectedTransaction(null);
@@ -108,9 +121,9 @@ const Approvals = () => {
     try {
       await rejectTransactionMutation.mutateAsync({
         transactionId: selectedTransaction.id,
-        reason
+        reason,
       });
-      
+
       toast.success("Transaction rejected successfully!");
       setShowRejectModal(false);
       setSelectedTransaction(null);
@@ -126,7 +139,9 @@ const Approvals = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">Transaction Approvals</h1>
+            <h1 className="text-3xl font-bold text-slate-800">
+              Transaction Approvals
+            </h1>
             <p className="text-slate-600">
               Review and approve pending transactions
               {pendingTransactions.length > 0 && (
@@ -143,7 +158,9 @@ const Approvals = () => {
               disabled={isLoading}
               className="flex items-center space-x-2 px-4 py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50"
             >
-              <ArrowPathIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <ArrowPathIcon
+                className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+              />
               <span>Refresh</span>
             </button>
 
@@ -156,12 +173,15 @@ const Approvals = () => {
             </button>
 
             <button
-              onClick={() => canCreateChecker && setShowCreateCheckerModal(true)}
+              onClick={() =>
+                canCreateChecker && setShowCreateCheckerModal(true)
+              }
               disabled={!canCreateChecker}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-white
-                ${canCreateChecker
-                  ? "bg-blue-600 hover:bg-blue-700"
-                  : "bg-gray-300 cursor-not-allowed"
+                ${
+                  canCreateChecker
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-gray-300 cursor-not-allowed"
                 }`}
             >
               <PlusIcon className="w-4 h-4" />
@@ -228,7 +248,7 @@ const Approvals = () => {
                 </thead>
 
                 <tbody className="divide-y divide-slate-200">
-                  {transactions.map((transaction) => (
+                  {transactions.map((transaction,i) => (
                     <tr
                       key={transaction.id}
                       className="hover:bg-slate-50 transition-colors"
@@ -237,15 +257,7 @@ const Approvals = () => {
                       <td className="px-6 py-4">
                         <div>
                           <div className="font-medium text-slate-900">
-                            {transaction.requestType} #{transaction.id}
-                          </div>
-                          <div className="text-sm text-slate-500">
-                            {transaction.category}
-                            {transaction.groupKey && (
-                              <span className="ml-2 text-xs bg-slate-100 px-1.5 py-0.5 rounded">
-                                {transaction.groupKey}
-                              </span>
-                            )}
+                            #{i + 1}
                           </div>
                         </div>
                       </td>
@@ -253,7 +265,10 @@ const Approvals = () => {
                       {/* Amount */}
                       <td className="px-6 py-4">
                         <div className="font-semibold text-slate-900">
-                          {formatCurrency(transaction.amount, transaction.currency)}
+                          {formatCurrency(
+                            transaction.amount,
+                            transaction.currency
+                          )}
                         </div>
                       </td>
 
@@ -289,7 +304,8 @@ const Approvals = () => {
 
                       {/* Actions */}
                       <td className="px-6 py-4">
-                        {transaction.status === "Pending" && canApproveTransactions ? (
+                        {transaction.status === "Pending" &&
+                        canApproveTransactions ? (
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleApprove(transaction)}
@@ -308,7 +324,9 @@ const Approvals = () => {
                           </div>
                         ) : (
                           <span className="text-xs text-slate-400">
-                            {transaction.status === "Pending" ? "No permission" : "Processed"}
+                            {transaction.status === "Pending"
+                              ? "No permission"
+                              : "Processed"}
                           </span>
                         )}
                       </td>
