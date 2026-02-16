@@ -1,5 +1,21 @@
 import apiClient from "../api/client";
 
+// Utility to extract API error messages
+const extractApiErrorMessage = (error) => {
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+  if (error.response?.data?.error) {
+    return error.response.data.error;
+  }
+  if (error.response?.data?.errors) {
+    const errors = error.response.data.errors;
+    const firstError = Object.values(errors)[0];
+    return Array.isArray(firstError) ? firstError[0] : firstError;
+  }
+  return error.message || "An error occurred";
+};
+
 // Transactions API service
 export const transactionsService = {
   // Get transactions with filters
@@ -73,12 +89,21 @@ export const transactionsService = {
       payload.otpChallengeId = payoutData.otpChallengeId;
     }
   
-    const response = await apiClient.post(
-      "/customer/transfers/payout",
-      payload
-    );
-  
-    return response.data;
+    try {
+      const response = await apiClient.post(
+        "/customer/transfers/payout",
+        payload
+      );
+      return response.data;
+    } catch (error) {
+      // Extract and throw the actual API error message
+      const apiErrorMessage = extractApiErrorMessage(error);
+      const enhancedError = new Error(apiErrorMessage);
+      enhancedError.originalError = error;
+      enhancedError.response = error.response;
+      
+      throw enhancedError;
+    }
   },
 
   resolveCustomer: async (identifier) => {
@@ -108,18 +133,38 @@ export const transactionsService = {
       })),
     };
 
-    const response = await apiClient.post("/customer/transfers/payout/bulk", payload);
-    return response.data;
+    try {
+      const response = await apiClient.post("/customer/transfers/payout/bulk", payload);
+      return response.data;
+    } catch (error) {
+      // Extract and throw the actual API error message
+      const apiErrorMessage = extractApiErrorMessage(error);
+      const enhancedError = new Error(apiErrorMessage);
+      enhancedError.originalError = error;
+      enhancedError.response = error.response;
+      
+      throw enhancedError;
+    }
   },
 
   tagPay: async (tagPayData) => {
-    const response = await apiClient.post("/customer/transfers/p2p", {
-      amount: parseFloat(tagPayData.amount),
-      narration: tagPayData.narration,
-      destinationTagOrCode: tagPayData.destinationTagOrCode,
-      pin: tagPayData.pin, // Add PIN to payload
-    });
-    return response.data;
+    try {
+      const response = await apiClient.post("/customer/transfers/p2p", {
+        amount: parseFloat(tagPayData.amount),
+        narration: tagPayData.narration,
+        destinationTagOrCode: tagPayData.destinationTagOrCode,
+        pin: tagPayData.pin, // Add PIN to payload
+      });
+      return response.data;
+    } catch (error) {
+      // Extract and throw the actual API error message
+      const apiErrorMessage = extractApiErrorMessage(error);
+      const enhancedError = new Error(apiErrorMessage);
+      enhancedError.originalError = error;
+      enhancedError.response = error.response;
+      
+      throw enhancedError;
+    }
   },
 };
 

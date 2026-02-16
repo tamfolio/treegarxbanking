@@ -1,5 +1,21 @@
 import apiClient from "../api/client";
 
+// Utility to extract API error messages
+const extractApiErrorMessage = (error) => {
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+  if (error.response?.data?.error) {
+    return error.response.data.error;
+  }
+  if (error.response?.data?.errors) {
+    const errors = error.response.data.errors;
+    const firstError = Object.values(errors)[0];
+    return Array.isArray(firstError) ? firstError[0] : firstError;
+  }
+  return error.message || "An error occurred";
+};
+
 // Approvals API service
 export const approvalsService = {
   // Get transaction queue
@@ -53,7 +69,14 @@ export const approvalsService = {
       return response.data;
     } catch (error) {
       console.error("❌ Transaction approval failed:", error);
-      throw error;
+      
+      // Extract and throw the actual API error message
+      const apiErrorMessage = extractApiErrorMessage(error);
+      const enhancedError = new Error(apiErrorMessage);
+      enhancedError.originalError = error;
+      enhancedError.response = error.response;
+      
+      throw enhancedError;
     }
   },
 
@@ -76,7 +99,14 @@ export const approvalsService = {
       return response.data;
     } catch (error) {
       console.error("❌ Transaction rejection failed:", error);
-      throw error;
+      
+      // Extract and throw the actual API error message
+      const apiErrorMessage = extractApiErrorMessage(error);
+      const enhancedError = new Error(apiErrorMessage);
+      enhancedError.originalError = error;
+      enhancedError.response = error.response;
+      
+      throw enhancedError;
     }
   },
 };
