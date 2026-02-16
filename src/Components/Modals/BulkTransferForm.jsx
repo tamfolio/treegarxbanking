@@ -692,15 +692,6 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
               })}
             </div>
 
-            {errors.bulk && <p className="text-sm text-red-600">{errors.bulk}</p>}
-
-            {/* Submit Error */}
-            {errors.submit && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-800">{errors.submit}</p>
-              </div>
-            )}
-
             {/* Buttons */}
             <div className="flex space-x-3 pt-4">
               <button
