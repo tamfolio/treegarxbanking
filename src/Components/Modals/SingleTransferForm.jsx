@@ -44,6 +44,23 @@ const SingleTransferForm = ({
 
   const banks = banksData?.success ? banksData.data : [];
 
+  // Get customer type from localStorage
+  const getUserData = () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem("userData"));
+      return userData;
+    } catch (error) {
+      console.error("Error parsing userData from localStorage:", error);
+      return null;
+    }
+  };
+
+  const userData = getUserData();
+  const customerTypeCode = userData?.customer?.customerTypeCode;
+  const isIndividualCustomer = customerTypeCode === "Individual";
+
+  console.log("Customer Type:", customerTypeCode, "Is Individual:", isIndividualCustomer);
+
   // Format amount input with commas
   const formatAmountDisplay = (value) => {
     if (!value) return "";
@@ -265,22 +282,33 @@ const SingleTransferForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Form submission - shows OTP modal first
+  // Form submission - conditional OTP based on customer type
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
-    // Store transaction data and show OTP modal
-    setPendingTransactionData({
+    // Store transaction data
+    const transactionData = {
       ...formData,
       beneficiaryName: resolvedAccount.accountName,
       bankName: selectedBank?.bankName || "Unknown Bank",
-    });
-    setShowOtpModal(true);
+    };
+
+    setPendingTransactionData(transactionData);
+
+    // For Individual customers, skip OTP and go directly to PIN
+    if (isIndividualCustomer) {
+      console.log("Individual customer - skipping OTP, going directly to PIN");
+      setShowPinModal(true);
+    } else {
+      // For Business customers, show OTP modal first
+      console.log("Business customer - showing OTP modal first");
+      setShowOtpModal(true);
+    }
   };
 
-  // Handle OTP verification success - just store OTP data and show PIN modal
+  // Handle OTP verification success - store OTP data and show PIN modal
   const handleOtpSuccess = ({ otpCode, otpChallengeId }) => {
     setPendingTransactionData((prev) => ({
       ...prev,
@@ -295,10 +323,25 @@ const SingleTransferForm = ({
   // Handle PIN verification success - this is where the actual payout happens
   const handlePinVerified = async ({ pin, transactionData }) => {
     try {
+      // Create payload data with PIN
       const payloadData = {
         ...transactionData,
         pin: pin,
       };
+
+      // Only add OTP fields for Business customers
+      if (!isIndividualCustomer && transactionData.otpCode && transactionData.otpChallengeId) {
+        payloadData.otpCode = transactionData.otpCode;
+        payloadData.otpChallengeId = transactionData.otpChallengeId;
+      }
+
+      console.log("Payout payload:", {
+        ...payloadData,
+        pin: "***hidden***",
+        customerType: customerTypeCode,
+        hasOtpCode: !!payloadData.otpCode,
+        hasOtpChallengeId: !!payloadData.otpChallengeId
+      });
 
       const result = await payoutMutation.mutateAsync(payloadData);
       if (result.success) {
@@ -323,6 +366,14 @@ const SingleTransferForm = ({
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Customer Type Debug Info */}
+        <div className="bg-blue-50 border border-blue-200 rounded p-2">
+          <p className="text-xs text-blue-700">
+            Debug: Customer Type = {customerTypeCode || 'Unknown'} 
+            {isIndividualCustomer ? ' (OTP will be skipped)' : ' (OTP required)'}
+          </p>
+        </div>
+
         {/* Bank Selection */}
         <div className="relative">
           <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -514,7 +565,6 @@ const SingleTransferForm = ({
           </button>
         </div>
 
-
         {/* Buttons */}
         <div className="flex space-x-3 pt-4">
           <button
@@ -543,13 +593,15 @@ const SingleTransferForm = ({
         transactionType="transfer"
       />
 
-      {/* OTP Verification Modal */}
-      <OtpVerificationModal
-        isOpen={showOtpModal}
-        onClose={() => setShowOtpModal(false)}
-        onSuccess={handleOtpSuccess}
-        purpose="CreateTransfer"
-      />
+      {/* OTP Verification Modal - Only show for Business customers */}
+      {!isIndividualCustomer && (
+        <OtpVerificationModal
+          isOpen={showOtpModal}
+          onClose={() => setShowOtpModal(false)}
+          onSuccess={handleOtpSuccess}
+          purpose="CreateTransfer"
+        />
+      )}
     </>
   );
 };

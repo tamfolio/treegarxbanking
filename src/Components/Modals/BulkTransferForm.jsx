@@ -28,6 +28,23 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
 
   const banks = banksData?.success ? banksData.data : [];
 
+  // Get customer type from localStorage
+  const getUserData = () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem("userData"));
+      return userData;
+    } catch (error) {
+      console.error("Error parsing userData from localStorage:", error);
+      return null;
+    }
+  };
+
+  const userData = getUserData();
+  const customerTypeCode = userData?.customer?.customerTypeCode;
+  const isIndividualCustomer = customerTypeCode === "Individual";
+
+  console.log("Bulk Transfer - Customer Type:", customerTypeCode, "Is Individual:", isIndividualCustomer);
+
   // Format amount input with commas
   const formatAmountDisplay = (value) => {
     if (!value) return "";
@@ -307,13 +324,13 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Form submission - now shows OTP modal first
+  // Form submission - conditional OTP based on customer type
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) return;
 
-    // Store transaction data and show OTP modal
+    // Store transaction data
     const bulkData = {
       groupKey: groupKey || `BULK-${Date.now()}`,
       items: bulkItems.map((item) => ({
@@ -328,7 +345,16 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
     };
 
     setPendingTransactionData(bulkData);
-    setShowOtpModal(true);
+
+    // For Individual customers, skip OTP and go directly to PIN
+    if (isIndividualCustomer) {
+      console.log("Individual customer - skipping OTP for bulk transfer, going directly to PIN");
+      setShowPinModal(true);
+    } else {
+      // For Business customers, show OTP modal first
+      console.log("Business customer - showing OTP modal first for bulk transfer");
+      setShowOtpModal(true);
+    }
   };
 
   // Handle OTP verification success - store OTP data and show PIN modal
@@ -347,19 +373,30 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
   const handlePinVerified = async ({ pin, transactionData }) => {
     console.log("🔐 PIN Verified - Bulk Transaction Data:", {
       ...transactionData,
-      pin: "***hidden***"
+      pin: "***hidden***",
+      customerType: customerTypeCode
     });
 
     try {
+      // Create payload data with PIN
       const payloadData = {
         ...transactionData,
         pin: pin,
       };
 
+      // Only add OTP fields for Business customers
+      if (!isIndividualCustomer && transactionData.otpCode && transactionData.otpChallengeId) {
+        payloadData.otpCode = transactionData.otpCode;
+        payloadData.otpChallengeId = transactionData.otpChallengeId;
+      }
+
       console.log("📤 About to call bulk payout with payload:", {
         ...payloadData,
         pin: "***hidden***",
-        items: payloadData.items?.length ? `${payloadData.items.length} items` : 'no items'
+        items: payloadData.items?.length ? `${payloadData.items.length} items` : 'no items',
+        customerType: customerTypeCode,
+        hasOtpCode: !!payloadData.otpCode,
+        hasOtpChallengeId: !!payloadData.otpChallengeId
       });
 
       const result = await bulkPayoutMutation.mutateAsync(payloadData);
@@ -413,6 +450,16 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
             <span>Add Recipient</span>
           </button>
         </div>
+
+        {/* Customer Type Debug Info */}
+        {bulkItems.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded p-2">
+            <p className="text-xs text-blue-700">
+              Debug: Customer Type = {customerTypeCode || 'Unknown'} 
+              {isIndividualCustomer ? ' (OTP will be skipped)' : ' (OTP required)'}
+            </p>
+          </div>
+        )}
 
         {bulkItems.length === 0 ? (
           <div className="text-center py-8">
@@ -724,13 +771,15 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
         transactionType="bulk"
       />
 
-      {/* OTP Verification Modal */}
-      <OtpVerificationModal
-        isOpen={showOtpModal}
-        onClose={() => setShowOtpModal(false)}
-        onSuccess={handleOtpSuccess}
-        purpose="CreateTransfer"
-      />
+      {/* OTP Verification Modal - Only show for Business customers */}
+      {!isIndividualCustomer && (
+        <OtpVerificationModal
+          isOpen={showOtpModal}
+          onClose={() => setShowOtpModal(false)}
+          onSuccess={handleOtpSuccess}
+          purpose="CreateTransfer"
+        />
+      )}
     </>
   );
 };

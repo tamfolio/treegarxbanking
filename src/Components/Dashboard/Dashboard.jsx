@@ -34,7 +34,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userData = JSON.parse(localStorage.getItem("userData"));
-  console.log('userData',userData.actor)
+  console.log('userData',userData.customer.customerTypeCode)
 
   // Get profile data from global state
   const {
