@@ -16,11 +16,71 @@ const DocumentsStep = ({
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  console.log("documents", documents)
+  // Enhanced error extraction function
+  const extractErrorMessage = async (response) => {
+    try {
+      // Try to get JSON error response first
+      const errorData = await response.json();
+      
+      console.log('Full error response:', errorData);
+      
+      // Check various possible error message fields
+      const possibleErrorFields = [
+        'message',
+        'error', 
+        'errorMessage',
+        'error_description',
+        'detail',
+        'details',
+        'msg',
+        'description'
+      ];
+      
+      // Look for error message in common fields
+      for (const field of possibleErrorFields) {
+        if (errorData[field]) {
+          return errorData[field];
+        }
+      }
+      
+      // Check for validation errors array
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        return errorData.errors.map(err => err.message || err).join(', ');
+      }
+      
+      // Check for nested error object
+      if (errorData.error && typeof errorData.error === 'object') {
+        return errorData.error.message || JSON.stringify(errorData.error);
+      }
+      
+      // If no specific error message, return the whole response as string
+      return JSON.stringify(errorData);
+      
+    } catch (parseError) {
+      console.log('Could not parse error as JSON, trying as text...');
+      
+      try {
+        // Try to get text response
+        const errorText = await response.text();
+        console.log('Error response as text:', errorText);
+        
+        if (errorText && errorText.trim()) {
+          return errorText;
+        }
+      } catch (textError) {
+        console.log('Could not parse error as text either');
+      }
+      
+      // Fallback to HTTP status
+      return `HTTP ${response.status}: ${response.statusText}`;
+    }
+  };
+
   const handleUpload = async () => {
     if (!selectedDocumentType || !uploadFile) {
-      setErrors({ upload: 'Please select both document type and file' });
-      onError('Please select both document type and file');
+      const errorMsg = 'Please select both document type and file';
+      setErrors({ upload: errorMsg });
+      onError(errorMsg);
       return;
     }
 
@@ -28,54 +88,95 @@ const DocumentsStep = ({
     setErrors({});
 
     try {
-      const fd = new FormData();
-      fd.append('file', uploadFile);
-      fd.append('documentKey', selectedDocumentType);
-      fd.append('ContentType', uploadFile.type);
-      fd.append('ContentDisposition', `form-data; name="file"; filename="${uploadFile.name}"`);
-      fd.append('Name', 'file');
-      fd.append('FileName', uploadFile.name);
+      const authToken = localStorage.getItem('authToken') ||
+                       localStorage.getItem('businessToken') || 
+                       sessionStorage.getItem('authToken') ||
+                       localStorage.getItem('token');
 
-      console.log('Uploading document:', {
+      if (!authToken) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+
+      // Create simple FormData (matching working Postman approach)
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      formData.append('documentKey', selectedDocumentType);
+
+      console.log('Upload request:', {
+        customerId,
         documentKey: selectedDocumentType,
         fileName: uploadFile.name,
-        customerId
+        fileSize: uploadFile.size,
+        fileType: uploadFile.type,
+        authToken: authToken.substring(0, 20) + '...' // Log partial token for debugging
       });
 
-      const res = await fetch(
-        `https://treegar-customer-api.treegar.com:8443/api/customer/documents/${customerId}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${
-              localStorage.getItem('authToken') ||
-              sessionStorage.getItem('authToken')
-            }`,
-          },
-          body: fd,
+      const apiUrl = `https://treegar-customer-api.treegar.com:8445/api/customer/documents/${customerId}`;
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          // Don't set Content-Type - let browser handle multipart boundary
+        },
+        body: formData
+      });
+
+      console.log('Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      if (response.ok) {
+        // Success - try to parse response
+        let successData;
+        try {
+          successData = await response.json();
+        } catch (parseError) {
+          successData = { message: 'Upload successful' };
         }
-      );
-
-      const data = await res.json();
-      console.log('Upload response:', data);
-
-      if (res.ok || data.success) {
-        onDocumentUploadSuccess(selectedDocumentType, data);
-        // Reset form
+        
+        console.log('✅ Upload successful:', successData);
+        
+        // Reset form and notify parent
+        onDocumentUploadSuccess(selectedDocumentType, successData);
         setSelectedDocumentType('');
         setUploadFile(null);
-        // Clear file input
+        
         const fileInput = document.querySelector('input[type="file"]');
         if (fileInput) fileInput.value = '';
+        
       } else {
-        const errorMsg = data.message || 'Upload failed';
-        setErrors({ upload: errorMsg });
-        onError(errorMsg);
+        // Error - extract the real error message from API response
+        const actualErrorMessage = await extractErrorMessage(response);
+        
+        console.error('❌ Upload failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          actualError: actualErrorMessage
+        });
+        
+        throw new Error(actualErrorMessage);
       }
+      
     } catch (error) {
-      const errorMsg = error.message || 'Upload failed';
-      setErrors({ upload: errorMsg });
-      onError(errorMsg);
+      console.error('❌ Upload error:', error);
+      
+      let errorMessage = 'Upload failed';
+      
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        errorMessage = 'Network error: Cannot reach the server. Please check your internet connection.';
+      } else if (error.message.includes('ERR_CONNECTION_RESET')) {
+        errorMessage = 'Connection lost during upload. Please try again with a smaller file or better connection.';
+      } else if (error.message) {
+        // Use the actual error message from the API
+        errorMessage = error.message;
+      }
+      
+      setErrors({ upload: errorMessage });
+      onError(errorMessage);
     } finally {
       setUploading(false);
     }
@@ -89,6 +190,8 @@ const DocumentsStep = ({
           Upload the required business documents to complete your verification process.
         </p>
       </div>
+
+
       
       {/* Document Upload Form */}
       <div className="bg-gray-50 p-4 rounded-lg space-y-4">
@@ -102,9 +205,10 @@ const DocumentsStep = ({
             value={selectedDocumentType}
             onChange={(e) => setSelectedDocumentType(e.target.value)}
             className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={uploading}
           >
             <option value="">Select document type</option>
-            {documents.map((d) => (
+            {documents?.map((d) => (
               <option key={d.documentKey} value={d.documentKey}>
                 {d.documentKey.toUpperCase().replace('_', ' ')}
               </option>
@@ -114,18 +218,24 @@ const DocumentsStep = ({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select File *
+            Select File * (PDF, JPG, PNG - Max 10MB)
           </label>
           <input
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
             onChange={(e) => setUploadFile(e.target.files[0])}
             className="w-full border border-gray-300 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={uploading}
           />
           {uploadFile && (
-            <div className="mt-2 flex items-center text-sm text-green-600">
-              <CheckCircleIcon className="w-4 h-4 mr-2" />
-              Selected: {uploadFile.name}
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center text-sm text-green-600">
+                <CheckCircleIcon className="w-4 h-4 mr-2" />
+                Selected: {uploadFile.name}
+              </div>
+              <div className="text-xs text-gray-500">
+                Size: {(uploadFile.size / 1024 / 1024).toFixed(2)} MB | Type: {uploadFile.type}
+              </div>
             </div>
           )}
         </div>
@@ -133,18 +243,58 @@ const DocumentsStep = ({
         <button
           onClick={handleUpload}
           disabled={!selectedDocumentType || !uploadFile || uploading}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+            uploading
+              ? 'bg-gray-400 cursor-not-allowed'
+              : !selectedDocumentType || !uploadFile
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700'
+          } text-white`}
         >
-          {uploading ? 'Uploading...' : 'Upload Document'}
+          {uploading ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Uploading...
+            </span>
+          ) : (
+            'Upload Document'
+          )}
         </button>
 
-        {errors.upload && <p className="text-sm text-red-600">{errors.upload}</p>}
+        {/* Enhanced Error Display */}
+        {errors.upload && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-red-900 mb-1">Upload Failed</h4>
+                <p className="text-sm text-red-700 whitespace-pre-wrap">
+                  {errors.upload}
+                </p>
+                <details className="mt-2">
+                  <summary className="text-xs text-red-600 cursor-pointer hover:text-red-800">
+                    Show technical details
+                  </summary>
+                  <div className="mt-1 text-xs text-red-600 bg-red-25 p-2 rounded border">
+                    <p><strong>File:</strong> {uploadFile?.name}</p>
+                    <p><strong>Size:</strong> {uploadFile ? (uploadFile.size / 1024 / 1024).toFixed(2) : 'N/A'} MB</p>
+                    <p><strong>Type:</strong> {uploadFile?.type}</p>
+                    <p><strong>Document Type:</strong> {selectedDocumentType}</p>
+                  </div>
+                </details>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Uploaded Documents List */}
+      {/* Rest of component stays the same... */}
       <div className="space-y-3">
         <h4 className="font-medium text-gray-900">Uploaded Documents</h4>
-        {documents.length > 0 ? (
+        {documents && documents.length > 0 ? (
           <div className="space-y-3">
             {documents.map((doc, index) => (
               <div key={`${doc.documentKey}-${index}`} className="border border-gray-200 rounded-lg p-4">
@@ -177,22 +327,6 @@ const DocumentsStep = ({
             <p className="text-sm">No documents uploaded yet</p>
           </div>
         )}
-      </div>
-
-      {/* Requirements Info */}
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <div className="flex items-start space-x-3">
-          <CheckCircleIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div className="text-sm">
-            <p className="font-medium text-blue-900">Document Requirements</p>
-            <ul className="text-blue-700 mt-1 space-y-1">
-              <li>• Documents should be clear and legible</li>
-              <li>• Accepted formats: PDF, JPG, PNG</li>
-              <li>• Maximum file size: 5MB per document</li>
-              <li>• Documents will be reviewed within 24-48 hours</li>
-            </ul>
-          </div>
-        </div>
       </div>
     </div>
   );
