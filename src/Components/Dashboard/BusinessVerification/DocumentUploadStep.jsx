@@ -43,7 +43,7 @@ const DocumentsStep = ({
       });
 
       const res = await fetch(
-        `https://treegar-accounts-api.treegar.com:8443/api/customer/documents/${customerId}`,
+        `https://treegar-customer-api.treegar.com:8443/api/customer/documents/${customerId}`,
         {
           method: 'POST',
           headers: {
