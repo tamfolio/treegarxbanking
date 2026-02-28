@@ -236,6 +236,22 @@ apiClient.interceptors.response.use(
     if (error.response?.status >= 500) {
       console.error('❌ Server error occurred');
     }
+
+    // ✅ Extract real API error message and attach to error object
+    // This ensures every component gets the actual API message, not a generic HTTP one
+    const apiMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.response?.data?.errors?.[0] ||
+      error.message;
+
+    // Attach for explicit access: catch(e => toast.error(e.apiMessage))
+    error.apiMessage = apiMessage;
+
+    // Override .message so generic catch(e => toast.error(e.message)) also works
+    if (error.response?.data?.message) {
+      error.message = error.response.data.message;
+    }
     
     return Promise.reject(error);
   }

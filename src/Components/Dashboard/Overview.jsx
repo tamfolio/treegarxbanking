@@ -14,6 +14,7 @@ import { useProfileData } from "../../hooks/useProfile";
 import { useTransactions } from "../../hooks/useTransactions";
 import { getTimeBasedGreeting } from "../../utils/timeGreeting";
 import StatementDownloadModal from "../Modals/StatementDownloadModal";
+import InterestBreakdownModal from "../Modals/InterestBreakdownModal";
 import PayoutModal from "../Modals/PayoutModal";
 import SetPinModal from "../Modals/SetPinModal";
 import TransactionLimits from "./TransactionLimit";
@@ -26,7 +27,7 @@ const Overview = () => {
   const [copiedField, setCopiedField] = useState("");
   const [showSetPinModal, setShowSetPinModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
-
+  const [showInterestModal, setShowInterestModal] = useState(false);
   // Get profile data from global state
   const {
     firstName,
@@ -372,18 +373,26 @@ const Overview = () => {
 
               {/* Interest Accrued */}
               {interestInfo && (
-                <div>
+                <div
+                  className="cursor-pointer"
+                  onClick={() => setShowInterestModal(true)}
+                >
                   <p className="text-sm text-slate-600 mb-1 font-medium">
                     Interest Accrued
                   </p>
-                  <div className="text-green-600 font-bold text-lg">
+                  <div className="text-green-600 font-bold text-lg underline decoration-dotted">
                     {formatCurrency(interestInfo.accruedAmount)}
                   </div>
                   <p className="text-xs text-slate-500 font-medium">
-                    {interestInfo.daysUntilPayout} days until payout
+                     View breakdown →
                   </p>
                 </div>
               )}
+
+              <InterestBreakdownModal
+                isOpen={showInterestModal}
+                onClose={() => setShowInterestModal(false)}
+              />
             </div>
           </div>
 

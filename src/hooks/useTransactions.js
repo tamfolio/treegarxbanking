@@ -14,6 +14,35 @@ export const useTransactions = (filters = {}, options = {}) => {
   });
 };
 
+// Hook for fetching daily interest breakdown
+export const useInterestBreakdown = (options = {}) => {
+  return useQuery({
+    queryKey: ['interest-breakdown'],
+    queryFn: async () => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(
+        'https://treegar-customer-api.treegar.com:8445/api/customer/interest/daily-breakdown',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch interest breakdown');
+      }
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 15 * 60 * 1000, // 15 minutes
+    retry: 2,
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+};
+
 // Hook for fetching banks
 export const useBanks = (options = {}) => {
   return useQuery({
@@ -63,9 +92,7 @@ export const useTagPay = () => {
   return useMutation({
     mutationFn: transactionsService.tagPay,
     onSuccess: () => {
-      // Invalidate transactions query to refresh the list
       queryClient.invalidateQueries(['transactions']);
-      // Invalidate profile to refresh balance
       queryClient.invalidateQueries(['profile']);
     },
   });
@@ -78,9 +105,7 @@ export const usePayout = () => {
   return useMutation({
     mutationFn: transactionsService.payout,
     onSuccess: () => {
-      // Invalidate transactions query to refresh the list
       queryClient.invalidateQueries(['transactions']);
-      // Invalidate profile to refresh balance
       queryClient.invalidateQueries(['profile']);
     },
   });
@@ -101,14 +126,10 @@ export const useBulkPayout = () => {
   return useMutation({
     mutationFn: transactionsService.bulkPayout,
     onSuccess: () => {
-      // Invalidate transactions query to refresh the list
       queryClient.invalidateQueries(['transactions']);
-      // Invalidate profile to refresh balance
       queryClient.invalidateQueries(['profile']);
     },
   });
 };
-
-
 
 export default useTransactions;
