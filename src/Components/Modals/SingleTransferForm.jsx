@@ -366,14 +366,6 @@ const SingleTransferForm = ({
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Customer Type Debug Info */}
-        <div className="bg-blue-50 border border-blue-200 rounded p-2">
-          <p className="text-xs text-blue-700">
-            Debug: Customer Type = {customerTypeCode || 'Unknown'} 
-            {isIndividualCustomer ? ' (OTP will be skipped)' : ' (OTP required)'}
-          </p>
-        </div>
-
         {/* Bank Selection */}
         <div className="relative">
           <label className="block text-sm font-medium text-slate-700 mb-2">

@@ -451,15 +451,7 @@ const BulkTransferForm = ({ bulkGroup = null, onSuccess, onClose }) => {
           </button>
         </div>
 
-        {/* Customer Type Debug Info */}
-        {bulkItems.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded p-2">
-            <p className="text-xs text-blue-700">
-              Debug: Customer Type = {customerTypeCode || 'Unknown'} 
-              {isIndividualCustomer ? ' (OTP will be skipped)' : ' (OTP required)'}
-            </p>
-          </div>
-        )}
+
 
         {bulkItems.length === 0 ? (
           <div className="text-center py-8">
