@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   HomeIcon,
-  CreditCardIcon,
-  BanknotesIcon,
   ArrowsRightLeftIcon,
   DocumentTextIcon,
   UserGroupIcon,
@@ -14,17 +12,16 @@ import {
   Bars3Icon,
   XMarkIcon,
   ClipboardDocumentCheckIcon,
+  CalendarDaysIcon,           // ← add this
 } from "@heroicons/react/24/outline";
+
 import {
   HomeIcon as HomeIconSolid,
-  CreditCardIcon as CreditCardIconSolid,
-  BanknotesIcon as BanknotesIconSolid,
-  ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,
-  DocumentTextIcon as DocumentTextIconSolid,
+  ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,  // ← was missing "as" alias
   UserGroupIcon as UserGroupIconSolid,
-  WrenchScrewdriverIcon as WrenchScrewdriverIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid,
-  ClipboardDocumentCheckIcon as ClipboardDocumentCheckIconSolid
+  ClipboardDocumentCheckIcon as ClipboardDocumentCheckIconSolid,
+  CalendarDaysIcon as CalendarDaysIconSolid,
 } from "@heroicons/react/24/solid";
 import { useProfileData } from "../../hooks/useProfile";
 import { getTimeBasedGreeting } from "../../utils/timeGreeting";
@@ -56,50 +53,17 @@ const Dashboard = () => {
   const userType = customerType || "Personal";
 
   const navigation = [
+    { name: "Dashboard", href: "/dashboard", icon: HomeIcon, iconSolid: HomeIconSolid, exact: true },
+    { name: "Transactions", href: "/dashboard/transactions", icon: ArrowsRightLeftIcon, iconSolid: ArrowsRightLeftIconSolid },
+    { name: "Beneficiaries", href: "/dashboard/beneficiaries", icon: UserGroupIcon, iconSolid: UserGroupIconSolid },
     {
-      name: "Dashboard",
-      href: "/dashboard",
-      icon: HomeIcon,
-      iconSolid: HomeIconSolid,
-      exact: true,
+      name: "Scheduled Payments",                          // ← new
+      href: "/dashboard/scheduled-payments",
+      icon: CalendarDaysIcon,
+      iconSolid: CalendarDaysIconSolid,
     },
-    // {
-    //   name: "Accounts",
-    //   href: "/dashboard/accounts",
-    //   icon: CreditCardIcon,
-    //   iconSolid: CreditCardIconSolid,
-    // },
-    // {
-    //   name: "Virtual Accounts",
-    //   href: "/dashboard/virtual-accounts",
-    //   icon: BanknotesIcon,
-    //   iconSolid: BanknotesIconSolid,
-    // },
-    {
-      name: "Transactions",
-      href: "/dashboard/transactions",
-      icon: ArrowsRightLeftIcon,
-      iconSolid: ArrowsRightLeftIconSolid,
-    },
-    {
-      name: "Beneficiaries",
-      href: "/dashboard/beneficiaries",
-      icon: UserGroupIcon,
-      iconSolid: UserGroupIconSolid,
-    },
-    {
-      name: "Approvals", 
-      href: "/dashboard/approvals",
-      icon: ClipboardDocumentCheckIcon,
-      iconSolid: ClipboardDocumentCheckIconSolid,
-      badge: 5,
-    },
-    {
-      name: "Profile",
-      href: "/dashboard/profile",
-      icon: Cog6ToothIcon,
-      iconSolid: Cog6ToothIconSolid,
-    },
+    { name: "Approvals", href: "/dashboard/approvals", icon: ClipboardDocumentCheckIcon, iconSolid: ClipboardDocumentCheckIconSolid, badge: 5 },
+    { name: "Profile", href: "/dashboard/profile", icon: Cog6ToothIcon, iconSolid: Cog6ToothIconSolid },
   ];
 
   const isActive = (item) => {

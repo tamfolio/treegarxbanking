@@ -31,6 +31,7 @@ import Beneficiaries from "./Components/Dashboard/Beneficiaries";
 import Profile from "./Components/Dashboard/Profile";
 import EmailVerification from "./Components/Auth/EmailVerification";
 import Approvals from "./Components/Dashboard/Approvals";
+import ScheduledPayments from "./Components/Dashboard/ScheduledPayments";
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
             <Route path="payments" element={<Accounts />} />
             <Route path="approvals" element={<Approvals />} />
             <Route path="beneficiaries" element={<Beneficiaries />} />
+            <Route path="scheduled-payments" element={<ScheduledPayments />} />
             <Route path="profile" element={<Profile />} />
           </Route>
 
