@@ -12,6 +12,7 @@ import {
   WalletIcon,
   ArrowsRightLeftIcon,
   ArrowPathIcon,
+  MegaphoneIcon,
 } from "@heroicons/react/24/outline";
 import { useProfileData } from "../../hooks/useProfile";
 import { useTransactions } from "../../hooks/useTransactions";
@@ -25,6 +26,46 @@ import VerificationRequiredModal from "../Modals/VerificationRequiredModal";
 import SubWalletsModal from "../Modals/SubWalletsModal";
 import { useWallets } from "../../hooks/useWallets";
 
+// ─── Marquee Banner ───────────────────────────────────────────────────────────
+
+const MarqueeBanner = () => {
+  const message =
+    "🎉 Earn 20% per annum on your Nexus wallet balance — funds grow automatically every day!  ✨ Your money works for you — 20% p.a. interest, no hidden fees.  📈 20% annual interest credited daily. Keep saving, keep earning!";
+
+  const repeated = `${message}          ${message}`;
+
+  return (
+    <div className="flex items-center gap-0 rounded-xl overflow-hidden border border-blue-200 bg-blue-50 mb-6">
+      {/* Label */}
+      <div className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-blue-600">
+        <MegaphoneIcon className="h-3.5 w-3.5 text-white shrink-0" />
+        <span className="text-[10px] font-bold text-white tracking-wide uppercase whitespace-nowrap">
+          20% p.a.
+        </span>
+      </div>
+
+      {/* Scrolling text */}
+      <div className="flex-1 overflow-hidden py-2 px-2">
+        <div
+          className="whitespace-nowrap text-xs font-medium text-blue-700"
+          style={{
+            display: "inline-block",
+            animation: "marquee 40s linear infinite",
+          }}
+        >
+          {repeated}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes marquee {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
+  );
+};
 // ─── Sub-wallets Panel ────────────────────────────────────────────────────────
 
 const SubWalletsPanel = ({ onOpenModal }) => {
@@ -381,8 +422,9 @@ const Overview = () => {
 
   return (
     <div className="p-6 max-w-full">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 mb-2">
               {getTimeBasedGreeting()}, {userFirstName}
@@ -420,6 +462,9 @@ const Overview = () => {
             </div>
           )}
         </div>
+
+        {/* Marquee banner */}
+        <MarqueeBanner />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
