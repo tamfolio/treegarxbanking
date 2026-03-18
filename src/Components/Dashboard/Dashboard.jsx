@@ -3,21 +3,17 @@ import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   HomeIcon,
   ArrowsRightLeftIcon,
-  DocumentTextIcon,
   UserGroupIcon,
-  WrenchScrewdriverIcon,
   Cog6ToothIcon,
-  BellIcon,
   MagnifyingGlassIcon,
   Bars3Icon,
   XMarkIcon,
   ClipboardDocumentCheckIcon,
-  CalendarDaysIcon,           // ← add this
+  CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
-
 import {
   HomeIcon as HomeIconSolid,
-  ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,  // ← was missing "as" alias
+  ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,
   UserGroupIcon as UserGroupIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid,
   ClipboardDocumentCheckIcon as ClipboardDocumentCheckIconSolid,
@@ -30,21 +26,14 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const userData = JSON.parse(localStorage.getItem("userData"));
-  console.log('userData',userData.customer.customerTypeCode)
 
-  // Get profile data from global state
   const {
     firstName,
-    lastName,
     customerType,
     customerTypeCode,
     businessName,
-    isLoading: profileLoading,
-    profile,
   } = useProfileData();
 
-  // Fallback to localStorage if profile is still loading
   const fallbackUserData = JSON.parse(localStorage.getItem("userData") || "{}");
   const userFirstName =
     customerTypeCode === "Business"
@@ -53,42 +42,60 @@ const Dashboard = () => {
   const userType = customerType || "Personal";
 
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: HomeIcon, iconSolid: HomeIconSolid, exact: true },
-    { name: "Transactions", href: "/dashboard/transactions", icon: ArrowsRightLeftIcon, iconSolid: ArrowsRightLeftIconSolid },
-    { name: "Beneficiaries", href: "/dashboard/beneficiaries", icon: UserGroupIcon, iconSolid: UserGroupIconSolid },
     {
-      name: "Scheduled Payments",                          // ← new
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: HomeIcon,
+      iconSolid: HomeIconSolid,
+      exact: true,
+    },
+    {
+      name: "Transactions",
+      href: "/dashboard/transactions",
+      icon: ArrowsRightLeftIcon,
+      iconSolid: ArrowsRightLeftIconSolid,
+    },
+    {
+      name: "Beneficiaries",
+      href: "/dashboard/beneficiaries",
+      icon: UserGroupIcon,
+      iconSolid: UserGroupIconSolid,
+    },
+    {
+      name: "Scheduled Payments",
       href: "/dashboard/scheduled-payments",
       icon: CalendarDaysIcon,
       iconSolid: CalendarDaysIconSolid,
     },
-    { name: "Approvals", href: "/dashboard/approvals", icon: ClipboardDocumentCheckIcon, iconSolid: ClipboardDocumentCheckIconSolid, badge: 5 },
-    { name: "Profile", href: "/dashboard/profile", icon: Cog6ToothIcon, iconSolid: Cog6ToothIconSolid },
+    {
+      name: "Approvals",
+      href: "/dashboard/approvals",
+      icon: ClipboardDocumentCheckIcon,
+      iconSolid: ClipboardDocumentCheckIconSolid,
+    },
+    {
+      name: "Profile",
+      href: "/dashboard/profile",
+      icon: Cog6ToothIcon,
+      iconSolid: Cog6ToothIconSolid,
+    },
   ];
 
   const isActive = (item) => {
-    if (item.exact) {
-      return location.pathname === item.href;
-    }
+    if (item.exact) return location.pathname === item.href;
     return location.pathname.startsWith(item.href);
   };
 
   const handleLogout = () => {
     try {
-      // Nuclear option - clear everything
       localStorage.clear();
       sessionStorage.clear();
-      
-      // Clear cookies if any
       document.cookie.split(";").forEach((c) => {
         document.cookie = c
           .replace(/^ +/, "")
           .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
-  
-      console.log("🔐 Complete logout - all storage cleared");
       navigate("/login");
-      
     } catch (error) {
       console.error("Error during logout:", error);
       navigate("/login");
@@ -96,9 +103,7 @@ const Dashboard = () => {
   };
 
   const handleNavigation = (href) => {
-    // Close sidebar on mobile
     setSidebarOpen(false);
-    // Navigate to the route
     navigate(href);
   };
 
@@ -121,13 +126,13 @@ const Dashboard = () => {
         }`}
       >
         <div className="flex flex-col h-full">
-          {/* Logo and close button */}
+          {/* Logo */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
             <div className="flex items-center justify-center w-full">
               <img
                 src="https://res.cloudinary.com/dnovlrekd/image/upload/v1766218299/ChatGPT_Image_Dec_17_2025_11_53_49_AM_zyw4jw_erdj10.png"
                 alt="Nexus Logo"
-                className="w-[100px] object-contain" // object-contain preserves aspect ratio
+                className="w-[100px] object-contain"
               />
             </div>
             <button
@@ -146,7 +151,6 @@ const Dashboard = () => {
             {navigation.map((item) => {
               const active = isActive(item);
               const IconComponent = active ? item.iconSolid : item.icon;
-
               return (
                 <button
                   key={item.name}
@@ -163,6 +167,11 @@ const Dashboard = () => {
                     }`}
                   />
                   {item.name}
+                  {item.badge && (
+                    <span className="ml-auto bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -207,8 +216,6 @@ const Dashboard = () => {
               >
                 <Bars3Icon className="h-6 w-6" />
               </button>
-
-              {/* Search bar */}
               <div className="hidden md:block">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -223,30 +230,25 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              {/* Account type toggle */}
-
-              {/* User profile */}
-              <div className="flex items-center space-x-3">
-                <div className="hidden md:block text-right">
-                  <div className="text-sm font-medium text-slate-900">
-                    {getTimeBasedGreeting()}, {userFirstName}
-                  </div>
-                  <div className="text-xs text-slate-500">{userType}</div>
+            <div className="flex items-center space-x-3">
+              <div className="hidden md:block text-right">
+                <div className="text-sm font-medium text-slate-900">
+                  {getTimeBasedGreeting()}, {userFirstName}
                 </div>
-                <Link to="/dashboard/profile">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-medium">
-                      {userFirstName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                </Link>
+                <div className="text-xs text-slate-500">{userType}</div>
               </div>
+              <Link to="/dashboard/profile">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-medium">
+                    {userFirstName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              </Link>
             </div>
           </div>
         </header>
 
-        {/* Page content - Force re-render on route changes */}
+        {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-slate-50">
           <Outlet key={location.pathname} />
         </main>

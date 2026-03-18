@@ -9,6 +9,9 @@ import {
   ClipboardDocumentIcon,
   CheckIcon,
   ArrowTopRightOnSquareIcon,
+  WalletIcon,
+  ArrowsRightLeftIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 import { useProfileData } from "../../hooks/useProfile";
 import { useTransactions } from "../../hooks/useTransactions";
@@ -19,6 +22,160 @@ import PayoutModal from "../Modals/PayoutModal";
 import SetPinModal from "../Modals/SetPinModal";
 import TransactionLimits from "./TransactionLimit";
 import VerificationRequiredModal from "../Modals/VerificationRequiredModal";
+import SubWalletsModal from "../Modals/SubWalletsModal";
+import { useWallets } from "../../hooks/useWallets";
+
+// ─── Sub-wallets Panel ────────────────────────────────────────────────────────
+
+const SubWalletsPanel = ({ onOpenModal }) => {
+  const {
+    data: walletsData,
+    isLoading,
+    refetch: refetchWallets,
+  } = useWallets();
+
+  const allItems = walletsData?.data?.items || [];
+  const mainWalletId = walletsData?.data?.mainWalletId;
+  const mainWallet = allItems.find((w) => w.walletType === "Main");
+  const subWallets = allItems.filter((w) => w.walletType === "Sub");
+
+  const formatCurrency = (amount) =>
+    `₦${parseFloat(amount || 0).toLocaleString("en-NG", {
+      minimumFractionDigits: 2,
+    })}`;
+
+  const statusDot = {
+    Active: "bg-emerald-400",
+    Inactive: "bg-slate-300",
+    Suspended: "bg-red-400",
+  };
+
+  const allDisplayWallets = [
+    ...(mainWallet ? [{ ...mainWallet, isMain: true }] : []),
+    ...subWallets.map((w) => ({ ...w, isMain: false })),
+  ];
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-blue-50 rounded-lg">
+            <WalletIcon className="h-4 w-4 text-blue-600" />
+          </div>
+          <h2 className="text-sm font-semibold text-slate-900">Wallets</h2>
+          {!isLoading && (
+            <span className="text-xs text-slate-400 font-medium">
+              ({allDisplayWallets.length})
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => refetchWallets()}
+            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <ArrowPathIcon
+              className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`}
+            />
+          </button>
+          <button
+            onClick={() => onOpenModal("manage")}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+          >
+            <PlusIcon className="h-3 w-3" />
+            Manage
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-y-auto max-h-52 divide-y divide-slate-50">
+        {isLoading ? (
+          <div className="py-8 text-center">
+            <ArrowPathIcon className="h-5 w-5 animate-spin text-blue-400 mx-auto mb-1.5" />
+            <p className="text-xs text-slate-400">Loading wallets...</p>
+          </div>
+        ) : allDisplayWallets.length === 0 ? (
+          <div className="py-8 text-center">
+            <WalletIcon className="h-6 w-6 text-slate-200 mx-auto mb-1.5" />
+            <p className="text-xs text-slate-400">No wallets found</p>
+          </div>
+        ) : (
+          allDisplayWallets.map((wallet) => (
+            <button
+              key={wallet.id}
+              onClick={() =>
+                onOpenModal(wallet.isMain ? "manage" : "transfer", wallet)
+              }
+              className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors text-left group"
+            >
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  wallet.isMain
+                    ? "bg-gradient-to-br from-blue-500 to-blue-700"
+                    : "bg-slate-100 group-hover:bg-blue-50"
+                }`}
+              >
+                <WalletIcon
+                  className={`h-4 w-4 ${
+                    wallet.isMain
+                      ? "text-white"
+                      : "text-slate-500 group-hover:text-blue-600"
+                  }`}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium text-slate-800 truncate">
+                    {wallet.name}
+                  </span>
+                  {wallet.isMain && (
+                    <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 shrink-0">
+                      Main
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      statusDot[wallet.status] || "bg-slate-300"
+                    }`}
+                  />
+                  <span className="text-xs text-slate-400">{wallet.status}</span>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-sm font-bold text-slate-900">
+                  {formatCurrency(wallet.currentBalance)}
+                </div>
+                {!wallet.isMain && (
+                  <div className="flex items-center justify-end gap-0.5 mt-0.5">
+                    <ArrowsRightLeftIcon className="h-3 w-3 text-slate-300 group-hover:text-blue-400 transition-colors" />
+                    <span className="text-[10px] text-slate-300 group-hover:text-blue-500 transition-colors font-medium">
+                      Transfer
+                    </span>
+                  </div>
+                )}
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+
+      {!isLoading && subWallets.length > 0 && (
+        <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/60 rounded-b-xl flex items-center justify-between">
+          <span className="text-xs text-slate-500">Sub-wallet total</span>
+          <span className="text-xs font-semibold text-slate-700">
+            {formatCurrency(
+              subWallets.reduce((s, w) => s + (w.currentBalance || 0), 0)
+            )}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Overview ─────────────────────────────────────────────────────────────────
 
 const Overview = () => {
   const [showStatementModal, setShowStatementModal] = useState(false);
@@ -28,82 +185,68 @@ const Overview = () => {
   const [showSetPinModal, setShowSetPinModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showInterestModal, setShowInterestModal] = useState(false);
-  // Get profile data from global state
+  const [subWalletsOpen, setSubWalletsOpen] = useState(false);
+  const [subWalletsInitialView, setSubWalletsInitialView] = useState("list");
+
   const {
     firstName,
-    lastName,
     walletBalance,
     customerType,
     kycStatus,
     verifications,
     profile,
     businessName,
-    isPending,
     customerTypeCode,
   } = useProfileData();
 
-  // Check if PIN is set and show modal if not
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const isBusiness = userData?.customer?.customerTypeCode === "Business";
+
   useEffect(() => {
     if (profile && profile.pinSet === false) {
       setShowSetPinModal(true);
     }
   }, [profile]);
 
-  // Handle PIN setup success
-  const handlePinSetSuccess = () => {
-    console.log("PIN set successfully");
-    // Profile will be refetched automatically by the mutation
-  };
+  const handlePinSetSuccess = () => console.log("PIN set successfully");
 
   const checkVerificationStatus = () => {
     if (!verifications || verifications.length === 0) return false;
-
-    const bvnVerification = verifications.find((v) => v.type === "bvn");
-    const ninVerification = verifications.find((v) => v.type === "nin");
-
-    const bvnCompleted = bvnVerification?.isCompleted || false;
-    const ninCompleted = ninVerification?.isCompleted || false;
-
-    return bvnCompleted && ninCompleted;
+    const bvn = verifications.find((v) => v.type === "bvn");
+    const nin = verifications.find((v) => v.type === "nin");
+    return (bvn?.isCompleted || false) && (nin?.isCompleted || false);
   };
 
   const handleSendMoney = () => {
-    if (checkVerificationStatus()) {
-      setShowPayoutModal(true);
-    } else {
-      setShowVerificationModal(true);
-    }
+    if (checkVerificationStatus()) setShowPayoutModal(true);
+    else setShowVerificationModal(true);
   };
 
-  // Get recent transactions (last 5)
-  const { data: transactionsData, isPending: transactionsLoading } =
-    useTransactions({
-      pageNumber: 1,
-      pageSize: 5,
-    });
+  const handleOpenSubWallets = (intent = "manage") => {
+    setSubWalletsInitialView(intent === "transfer" ? "transfer" : "list");
+    setSubWalletsOpen(true);
+  };
 
-  // Fallback user data
+  const { data: transactionsData, isPending: transactionsLoading } =
+    useTransactions({ pageNumber: 1, pageSize: 5 });
+
   const fallbackUserData = JSON.parse(localStorage.getItem("userData") || "{}");
   const userFirstName =
     customerTypeCode === "Business"
       ? businessName || fallbackUserData.businessName || "Business"
       : firstName || fallbackUserData.firstName || "User";
 
-  // Get additional profile data
   const profileData = profile?.data || fallbackUserData;
-  console.log("profiledata", profileData);
   const customerTag = profileData?.customer?.tag;
   const accountNumber =
-    profileData?.customer?.accountNumber || // ← Direct path first
-    profileData?.accountNumber || // ← Fallback 1
-    profileData?.customer?.accounts?.[0]?.accountNumber; // ← Fallback 2
+    profileData?.customer?.accountNumber ||
+    profileData?.accountNumber ||
+    profileData?.customer?.accounts?.[0]?.accountNumber;
   const interestInfo = profileData?.customer?.interest;
   const transactions = transactionsData?.success
     ? transactionsData.data.items
     : [];
 
-  console.log("interestInfo", interestInfo);
-  // Format wallet balance
   const formatCurrency = (amount) => {
     if (amount) {
       return new Intl.NumberFormat("en-NG", {
@@ -114,52 +257,44 @@ const Overview = () => {
     return "₦0.00";
   };
 
-  // Copy to clipboard function
   const copyToClipboard = async (text, fieldName) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(fieldName);
       setTimeout(() => setCopiedField(""), 2000);
     } catch (err) {
-      console.error("Failed to copy: ", err);
+      console.error("Failed to copy:", err);
     }
   };
 
-  const totalBalance = formatCurrency(walletBalance) || "₦34,720,451.25";
+  const totalBalance = formatCurrency(walletBalance) || "₦0.00";
 
-  // Format date for transactions
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-NG", {
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("en-NG", {
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
 
-  // Format amount with direction
   const formatAmount = (amount, direction) => {
-    const formattedAmount = `₦${parseFloat(amount).toLocaleString("en-NG", {
+    const fmt = `₦${parseFloat(amount).toLocaleString("en-NG", {
       minimumFractionDigits: 2,
     })}`;
-    return direction === "Credit"
-      ? `+${formattedAmount}`
-      : `-${formattedAmount}`;
+    return direction === "Credit" ? `+${fmt}` : `-${fmt}`;
   };
 
-  // Get status badge for transactions
   const getStatusBadge = (status) => {
-    const statusStyles = {
+    const styles = {
       Success: "bg-green-100 text-green-800",
       Failed: "bg-red-100 text-red-800",
       Pending: "bg-yellow-100 text-yellow-800",
       Processing: "bg-blue-100 text-blue-800",
     };
-
     return (
       <span
         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-          statusStyles[status] || "bg-slate-100 text-slate-800"
+          styles[status] || "bg-slate-100 text-slate-800"
         }`}
       >
         {status}
@@ -167,9 +302,8 @@ const Overview = () => {
     );
   };
 
-  // Get direction icon for transactions
-  const getDirectionIcon = (direction) => {
-    return direction === "Credit" ? (
+  const getDirectionIcon = (direction) =>
+    direction === "Credit" ? (
       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
         <svg
           className="w-3 h-3 text-green-600"
@@ -202,32 +336,12 @@ const Overview = () => {
         </svg>
       </div>
     );
-  };
 
-  // Statement download handlers
-  const handleDownloadStatement = () => {
-    setShowStatementModal(true);
-  };
-
-  const handleDownloadStart = () => {
-    console.log("Download started...");
-  };
-
-  const handleDownloadComplete = (success, message) => {
-    if (success) {
-      console.log("Download completed successfully");
-    } else {
-      console.error("Download failed:", message);
-    }
-  };
-
-  // Coming soon handler
   const handleComingSoon = () => {
     setShowComingSoon(true);
-    setTimeout(() => setShowComingSoon(false), 3000); // Auto hide after 3 seconds
+    setTimeout(() => setShowComingSoon(false), 3000);
   };
 
-  // Handler for KYC verification - routes to profile page
   const handleKYCVerification = () => {
     window.location.href = "/dashboard/profile";
   };
@@ -261,13 +375,12 @@ const Overview = () => {
       name: "Download Statement",
       icon: ArrowDownIcon,
       color: "bg-slate-50 text-slate-600",
-      onClick: handleDownloadStatement,
+      onClick: () => setShowStatementModal(true),
     },
   ];
 
   return (
     <div className="p-6 max-w-full">
-      {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -278,14 +391,12 @@ const Overview = () => {
               Here is a quick view of your Nexus accounts
             </p>
           </div>
-
-          {/* KYC Status badge / CTA */}
           {kycStatus === "Pending" ? (
             <button
               onClick={handleKYCVerification}
               className="flex items-center space-x-2 px-4 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white transition-colors duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
             >
-              <div className="w-2 h-2 rounded-full bg-white/80"></div>
+              <div className="w-2 h-2 rounded-full bg-white/80" />
               <span className="text-sm font-medium">
                 Complete verification to activate our services
               </span>
@@ -302,7 +413,7 @@ const Overview = () => {
                 className={`w-2 h-2 rounded-full ${
                   kycStatus === "Verified" ? "bg-green-400" : "bg-slate-400"
                 }`}
-              ></div>
+              />
               <span className="text-sm font-medium">
                 KYC {kycStatus || "Unknown"}
               </span>
@@ -312,91 +423,91 @@ const Overview = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column - Balance and Quick Actions */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Total Balance */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-900">
-                Total Balance
-              </h2>
-            </div>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+              Total Balance
+            </h2>
             <div className="text-4xl font-bold text-slate-900 mb-4">
               {totalBalance}
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
-              {/* Customer Tag */}
-              {customerTag && (
-                <div>
-                  <p className="text-sm text-slate-600 mb-1 font-medium">
-                    Customer Tag
-                  </p>
-                  <button
-                    onClick={() => copyToClipboard(customerTag, "tag")}
-                    className="flex items-center space-x-2 text-slate-900 hover:text-blue-600 transition-colors group"
-                  >
-                    <span className="font-mono font-bold">{customerTag}</span>
-                    {copiedField === "tag" ? (
-                      <CheckIcon className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <ClipboardDocumentIcon className="w-4 h-4 opacity-0 group-hover:opacity-100" />
-                    )}
-                  </button>
-                </div>
-              )}
-              {/* Bank Name */}
+              <div>
+                {customerTag ? (
+                  <div>
+                    <p className="text-sm text-slate-600 mb-1 font-medium">
+                      Customer Tag
+                    </p>
+                    <button
+                      onClick={() => copyToClipboard(customerTag, "tag")}
+                      className="flex items-center space-x-2 text-slate-900 hover:text-blue-600 transition-colors group"
+                    >
+                      <span className="font-mono font-bold">{customerTag}</span>
+                      {copiedField === "tag" ? (
+                        <CheckIcon className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <ClipboardDocumentIcon className="w-4 h-4 opacity-0 group-hover:opacity-100" />
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div />
+                )}
+              </div>
+
               <div>
                 <p className="text-sm text-slate-600 mb-1 font-medium">Bank</p>
                 <div className="text-slate-900 font-bold">Polaris Bank</div>
               </div>
 
-              {/* Account Number */}
-              {accountNumber && (
-                <div>
-                  <p className="text-sm text-slate-600 mb-1 font-medium">
-                    Account Number
-                  </p>
-                  <button
-                    onClick={() => copyToClipboard(accountNumber, "account")}
-                    className="flex items-center space-x-2 text-slate-900 hover:text-blue-600 transition-colors group"
-                  >
-                    <span className="font-mono font-bold">{accountNumber}</span>
-                    {copiedField === "account" ? (
-                      <CheckIcon className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <ClipboardDocumentIcon className="w-4 h-4 opacity-0 group-hover:opacity-100" />
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {/* Interest Accrued */}
-              {interestInfo && (
-                <div
-                  className="cursor-pointer"
-                  onClick={() => setShowInterestModal(true)}
-                >
-                  <p className="text-sm text-slate-600 mb-1 font-medium">
-                    Interest Accrued
-                  </p>
-                  <div className="text-green-600 font-bold text-lg underline decoration-dotted">
-                    {formatCurrency(interestInfo.accruedAmount)}
+              <div>
+                {accountNumber ? (
+                  <div>
+                    <p className="text-sm text-slate-600 mb-1 font-medium">
+                      Account Number
+                    </p>
+                    <button
+                      onClick={() => copyToClipboard(accountNumber, "account")}
+                      className="flex items-center space-x-2 text-slate-900 hover:text-blue-600 transition-colors group"
+                    >
+                      <span className="font-mono font-bold">
+                        {accountNumber}
+                      </span>
+                      {copiedField === "account" ? (
+                        <CheckIcon className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <ClipboardDocumentIcon className="w-4 h-4 opacity-0 group-hover:opacity-100" />
+                      )}
+                    </button>
                   </div>
-                  <p className="text-xs text-slate-500 font-medium">
-                     View breakdown →
-                  </p>
-                </div>
-              )}
+                ) : (
+                  <div />
+                )}
+              </div>
 
-              <InterestBreakdownModal
-                isOpen={showInterestModal}
-                onClose={() => setShowInterestModal(false)}
-              />
+              <div>
+                {interestInfo ? (
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => setShowInterestModal(true)}
+                  >
+                    <p className="text-sm text-slate-600 mb-1 font-medium">
+                      Interest Accrued
+                    </p>
+                    <div className="text-green-600 font-bold text-lg underline decoration-dotted">
+                      {formatCurrency(interestInfo.accruedAmount)}
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium">
+                      View breakdown &#8594;
+                    </p>
+                  </div>
+                ) : (
+                  <div />
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Quick Actions */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-900 mb-6">
               Quick Actions
@@ -421,13 +532,14 @@ const Overview = () => {
             </div>
           </div>
 
-          {/* Transaction Limits - Full width above balance */}
           <TransactionLimits />
         </div>
 
-        {/* Right column - Recent Transactions */}
         <div className="space-y-6">
-          {/* Recent Transactions */}
+          {isBusiness && (
+            <SubWalletsPanel onOpenModal={handleOpenSubWallets} />
+          )}
+
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-slate-900">
@@ -449,12 +561,12 @@ const Overview = () => {
                     key={i}
                     className="animate-pulse flex items-center space-x-3 p-3"
                   >
-                    <div className="w-8 h-8 bg-slate-200 rounded-full"></div>
+                    <div className="w-8 h-8 bg-slate-200 rounded-full" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-slate-200 rounded w-3/4" />
+                      <div className="h-3 bg-slate-200 rounded w-1/2" />
                     </div>
-                    <div className="h-4 bg-slate-200 rounded w-20"></div>
+                    <div className="h-4 bg-slate-200 rounded w-20" />
                   </div>
                 ))}
               </div>
@@ -483,7 +595,7 @@ const Overview = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
+                        <div className="text-right shrink-0">
                           <div
                             className={`text-sm font-bold ${
                               transaction.direction === "Credit"
@@ -515,9 +627,8 @@ const Overview = () => {
         </div>
       </div>
 
-      {/* Coming Soon Modal */}
       {showComingSoon && (
-        <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center transform transition-all duration-300 scale-105">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
@@ -551,36 +662,39 @@ const Overview = () => {
         </div>
       )}
 
-      {/* Set PIN Modal */}
+      <InterestBreakdownModal
+        isOpen={showInterestModal}
+        onClose={() => setShowInterestModal(false)}
+      />
       <SetPinModal
         isOpen={showSetPinModal}
         onClose={() => setShowSetPinModal(false)}
         onSuccess={handlePinSetSuccess}
       />
-
-      {/* Statement Download Modal */}
       <StatementDownloadModal
         isOpen={showStatementModal}
         onClose={() => setShowStatementModal(false)}
-        onDownloadStart={handleDownloadStart}
-        onDownloadComplete={handleDownloadComplete}
+        onDownloadStart={() => console.log("Download started...")}
+        onDownloadComplete={(success, msg) => {
+          if (success) console.log("Download complete");
+          else console.error("Download failed:", msg);
+        }}
       />
-
-      {/* Payout Modal */}
       <PayoutModal
         isOpen={showPayoutModal}
         onClose={() => setShowPayoutModal(false)}
-        onSuccess={() => {
-          // Refresh transactions when payout is successful
-          console.log("Payout successful - refreshing data");
-        }}
+        onSuccess={() => console.log("Payout successful")}
       />
-
       <VerificationRequiredModal
         isOpen={showVerificationModal}
         onClose={() => setShowVerificationModal(false)}
         verifications={verifications}
         customerType={customerType}
+      />
+      <SubWalletsModal
+        isOpen={subWalletsOpen}
+        onClose={() => setSubWalletsOpen(false)}
+        initialView={subWalletsInitialView}
       />
     </div>
   );
