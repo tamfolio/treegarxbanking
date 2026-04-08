@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "security-check": "grep -rE '[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}' ./dist && echo '❌ Email found in build output' && exit 1 || echo '✅ Clean'"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -20,7 +21,8 @@
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.9.4",
-    "tailwindcss": "^4.1.16"
+    "tailwindcss": "^4.1.16",
+    "vite-plugin-subresource-integrity": "^0.0.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
