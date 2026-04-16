@@ -58,7 +58,7 @@ function App() {
             {/* Dashboard sub-routes - Note: these are relative paths */}
             <Route index element={<Overview />} />
             <Route path="transactions" element={<Transactions />} />
-            <Route path="payments" element={<Accounts />} />
+            <Route path="accounts" element={<Accounts />} />
             <Route path="approvals" element={<Approvals />} />
             <Route path="beneficiaries" element={<Beneficiaries />} />
             <Route path="scheduled-payments" element={<ScheduledPayments />} />

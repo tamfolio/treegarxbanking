@@ -8,6 +8,7 @@ import {
   MagnifyingGlassIcon,
   Bars3Icon,
   XMarkIcon,
+  BanknotesIcon,
   ClipboardDocumentCheckIcon,
   CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
@@ -16,6 +17,7 @@ import {
   ArrowsRightLeftIcon as ArrowsRightLeftIconSolid,
   UserGroupIcon as UserGroupIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid,
+  BanknotesIcon as BanknotesIconSolid,
   ClipboardDocumentCheckIcon as ClipboardDocumentCheckIconSolid,
   CalendarDaysIcon as CalendarDaysIconSolid,
 } from "@heroicons/react/24/solid";
@@ -27,12 +29,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const {
-    firstName,
-    customerType,
-    customerTypeCode,
-    businessName,
-  } = useProfileData();
+  const { firstName, customerType, customerTypeCode, businessName } =
+    useProfileData();
 
   const fallbackUserData = JSON.parse(localStorage.getItem("userData") || "{}");
   const userFirstName =
@@ -60,6 +58,12 @@ const Dashboard = () => {
       href: "/dashboard/beneficiaries",
       icon: UserGroupIcon,
       iconSolid: UserGroupIconSolid,
+    },
+    {
+      name: "Accounts",
+      href: "/dashboard/accounts",
+      icon: BanknotesIcon,
+      iconSolid: BanknotesIconSolid,
     },
     {
       name: "Scheduled Payments",
