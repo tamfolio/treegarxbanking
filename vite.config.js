@@ -7,6 +7,8 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    subresourceIntegrity()
-  ]
+    subresourceIntegrity({
+      ignoreSources: [/^https?:\/\//], // ignore all external CDN URLs
+    }),
+  ],
 })
