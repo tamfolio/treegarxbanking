@@ -63,24 +63,26 @@ export const useChangePIN = () => {
 // Hook to get profile data without triggering a fetch (for components that just need the cached data)
 export const useProfileData = () => {
   const { data, isLoading, error } = useProfile();
-  
+  const d = data?.success ? data.data : null;
+
   return {
-    profile: data?.success ? data.data : null,
+    profile: d,
     isLoading,
     error,
-    // Convenience getters
-    firstName: data?.success ? data.data?.firstName : null,
-    lastName: data?.success ? data.data?.lastName : null,
-    businessName: data?.success ? data.data?.businessName : null,
-    email: data?.success ? data.data?.email : null,
-    code: data?.success ? data.data?.code : null,
-    walletBalance: data?.success ? data.data?.walletBalance : 0,
-    customerTypeCode: data?.success ? data.data?.customerTypeCode : null,
-    customerType: data?.success ? data.data?.customerTypeName : null,
-    kycStatus: data?.success ? data.data?.kycStatus : null,
-    onboardingStatus: data?.success ? data.data?.onboardingStatus : null,
-    verifications: data?.success ? data.data?.verifications || [] : [],
-    documents: data?.success ? data.data?.documents || [] : [],
+    firstName: d?.firstName || null,
+    lastName: d?.lastName || null,
+    businessName: d?.businessName || null,
+    email: d?.email || null,
+    code: d?.code || null,
+    walletBalance: d?.walletBalance || 0,
+    customerTypeCode: d?.customerTypeCode || null,
+    customerType: d?.customerTypeName || null,
+    kycStatus: d?.kycStatus || null,
+    onboardingStatus: d?.onboardingStatus || null,
+    verifications: d?.verifications || [],
+    documents: d?.documents || [],
+    accounts: d?.accounts || [],       // 👈 added
+    accountNumber: d?.accountNumber || null,  // 👈 added
   };
 };
 

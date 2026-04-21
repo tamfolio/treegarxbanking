@@ -40,7 +40,10 @@ const MarqueeBanner = () => {
       <div className="flex-1 overflow-hidden py-2 px-2">
         <div
           className="whitespace-nowrap text-xs font-medium text-blue-700"
-          style={{ display: "inline-block", animation: "marquee 40s linear infinite" }}
+          style={{
+            display: "inline-block",
+            animation: "marquee 40s linear infinite",
+          }}
         >
           {repeated}
         </div>
@@ -57,7 +60,11 @@ const MarqueeBanner = () => {
 
 // ─── Sub-wallets Panel ────────────────────────────────────────────────────────
 const SubWalletsPanel = ({ onOpenModal }) => {
-  const { data: walletsData, isLoading, refetch: refetchWallets } = useWallets();
+  const {
+    data: walletsData,
+    isLoading,
+    refetch: refetchWallets,
+  } = useWallets();
 
   const allItems = walletsData?.data?.items || [];
   const mainWallet = allItems.find((w) => w.walletType === "Main");
@@ -96,7 +103,9 @@ const SubWalletsPanel = ({ onOpenModal }) => {
             onClick={() => refetchWallets()}
             className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <ArrowPathIcon className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            <ArrowPathIcon
+              className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`}
+            />
           </button>
           <button
             onClick={() => onOpenModal("manage")}
@@ -123,7 +132,9 @@ const SubWalletsPanel = ({ onOpenModal }) => {
           allDisplayWallets.map((wallet) => (
             <button
               key={wallet.id}
-              onClick={() => onOpenModal(wallet.isMain ? "manage" : "transfer", wallet)}
+              onClick={() =>
+                onOpenModal(wallet.isMain ? "manage" : "transfer", wallet)
+              }
               className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors text-left group"
             >
               <div
@@ -135,13 +146,17 @@ const SubWalletsPanel = ({ onOpenModal }) => {
               >
                 <WalletIcon
                   className={`h-4 w-4 ${
-                    wallet.isMain ? "text-white" : "text-slate-500 group-hover:text-blue-600"
+                    wallet.isMain
+                      ? "text-white"
+                      : "text-slate-500 group-hover:text-blue-600"
                   }`}
                 />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-medium text-slate-800 truncate">{wallet.name}</span>
+                  <span className="text-sm font-medium text-slate-800 truncate">
+                    {wallet.name}
+                  </span>
                   {wallet.isMain && (
                     <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-100 shrink-0">
                       Main
@@ -149,8 +164,12 @@ const SubWalletsPanel = ({ onOpenModal }) => {
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot[wallet.status] || "bg-slate-300"}`} />
-                  <span className="text-xs text-slate-400">{wallet.status}</span>
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusDot[wallet.status] || "bg-slate-300"}`}
+                  />
+                  <span className="text-xs text-slate-400">
+                    {wallet.status}
+                  </span>
                 </div>
               </div>
               <div className="text-right shrink-0">
@@ -175,7 +194,9 @@ const SubWalletsPanel = ({ onOpenModal }) => {
         <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/60 rounded-b-xl flex items-center justify-between">
           <span className="text-xs text-slate-500">Sub-wallet total</span>
           <span className="text-xs font-semibold text-slate-700">
-            {formatCurrency(subWallets.reduce((s, w) => s + (w.currentBalance || 0), 0))}
+            {formatCurrency(
+              subWallets.reduce((s, w) => s + (w.currentBalance || 0), 0),
+            )}
           </span>
         </div>
       )}
@@ -194,6 +215,7 @@ const Overview = () => {
   const [subWalletsOpen, setSubWalletsOpen] = useState(false);
   const [subWalletsInitialView, setSubWalletsInitialView] = useState("list");
 
+  // Destructure accounts and accountNumber directly from the hook
   const {
     firstName,
     walletBalance,
@@ -203,6 +225,8 @@ const Overview = () => {
     profile,
     businessName,
     customerTypeCode,
+    accounts, // 👈 new
+    accountNumber, // 👈 new
   } = useProfileData();
 
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
@@ -239,16 +263,20 @@ const Overview = () => {
 
   const profileData = profile?.data || fallbackUserData;
   const customerTag = profileData?.customer?.tag;
-  const accountNumber =
-    profileData?.customer?.accountNumber ||
-    profileData?.accountNumber ||
-    profileData?.customer?.accounts?.[0]?.accountNumber;
+  const primaryAccount =
+    accounts.find((a) => a.accountNumber === accountNumber) || accounts[0];
+  const BankName = primaryAccount?.bankName || "—";
   const interestInfo = profileData?.customer?.interest;
-  const transactions = transactionsData?.success ? transactionsData.data.items : [];
+  const transactions = transactionsData?.success
+    ? transactionsData.data.items
+    : [];
 
   const formatCurrency = (amount) => {
     if (amount) {
-      return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(amount);
+      return new Intl.NumberFormat("en-NG", {
+        style: "currency",
+        currency: "NGN",
+      }).format(amount);
     }
     return "₦0.00";
   };
@@ -286,7 +314,9 @@ const Overview = () => {
       Processing: "bg-blue-100 text-blue-800",
     };
     return (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || "bg-slate-100 text-slate-800"}`}>
+      <span
+        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || "bg-slate-100 text-slate-800"}`}
+      >
         {status}
       </span>
     );
@@ -295,14 +325,34 @@ const Overview = () => {
   const getDirectionIcon = (direction) =>
     direction === "Credit" ? (
       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-        <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8l-8-8-8 8" />
+        <svg
+          className="w-3 h-3 text-green-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4v16m8-8l-8-8-8 8"
+          />
         </svg>
       </div>
     ) : (
       <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
-        <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20V4m-8 8l8 8 8-8" />
+        <svg
+          className="w-3 h-3 text-red-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 20V4m-8 8l8 8 8-8"
+          />
         </svg>
       </div>
     );
@@ -320,7 +370,9 @@ const Overview = () => {
             <h1 className="text-2xl font-bold text-slate-900 mb-2">
               {getTimeBasedGreeting()}, {userFirstName}
             </h1>
-            <p className="text-slate-600">Here is a quick view of your Nexus accounts</p>
+            <p className="text-slate-600">
+              Here is a quick view of your Nexus accounts
+            </p>
           </div>
           {kycStatus === "Pending" ? (
             <button
@@ -328,12 +380,20 @@ const Overview = () => {
               className="flex items-center space-x-2 px-4 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white transition-colors duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
             >
               <div className="w-2 h-2 rounded-full bg-white/80" />
-              <span className="text-sm font-medium">Complete verification to activate our services</span>
+              <span className="text-sm font-medium">
+                Complete verification to activate our services
+              </span>
             </button>
           ) : (
-            <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${kycStatus === "Verified" ? "bg-green-50 text-green-600" : "bg-slate-50 text-slate-600"}`}>
-              <div className={`w-2 h-2 rounded-full ${kycStatus === "Verified" ? "bg-green-400" : "bg-slate-400"}`} />
-              <span className="text-sm font-medium">KYC {kycStatus || "Unknown"}</span>
+            <div
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${kycStatus === "Verified" ? "bg-green-50 text-green-600" : "bg-slate-50 text-slate-600"}`}
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${kycStatus === "Verified" ? "bg-green-400" : "bg-slate-400"}`}
+              />
+              <span className="text-sm font-medium">
+                KYC {kycStatus || "Unknown"}
+              </span>
             </div>
           )}
         </div>
@@ -344,13 +404,19 @@ const Overview = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Balance Card */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Total Balance</h2>
-            <div className="text-4xl font-bold text-slate-900 mb-4">{totalBalance}</div>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+              Total Balance
+            </h2>
+            <div className="text-4xl font-bold text-slate-900 mb-4">
+              {totalBalance}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100">
               <div>
                 {customerTag ? (
                   <div>
-                    <p className="text-sm text-slate-600 mb-1 font-medium">Customer Tag</p>
+                    <p className="text-sm text-slate-600 mb-1 font-medium">
+                      Customer Tag
+                    </p>
                     <button
                       onClick={() => copyToClipboard(customerTag, "tag")}
                       className="flex items-center space-x-2 text-slate-900 hover:text-blue-600 transition-colors group"
@@ -363,23 +429,29 @@ const Overview = () => {
                       )}
                     </button>
                   </div>
-                ) : <div />}
+                ) : (
+                  <div />
+                )}
               </div>
 
               <div>
                 <p className="text-sm text-slate-600 mb-1 font-medium">Bank</p>
-                <div className="text-slate-900 font-bold">Polaris Bank</div>
+                <div className="text-slate-900 font-bold">{BankName}</div>{" "}
               </div>
 
               <div>
                 {accountNumber ? (
                   <div>
-                    <p className="text-sm text-slate-600 mb-1 font-medium">Account Number</p>
+                    <p className="text-sm text-slate-600 mb-1 font-medium">
+                      Account Number
+                    </p>
                     <button
                       onClick={() => copyToClipboard(accountNumber, "account")}
                       className="flex items-center space-x-2 text-slate-900 hover:text-blue-600 transition-colors group"
                     >
-                      <span className="font-mono font-bold">{accountNumber}</span>
+                      <span className="font-mono font-bold">
+                        {accountNumber}
+                      </span>
                       {copiedField === "account" ? (
                         <CheckIcon className="w-4 h-4 text-green-600" />
                       ) : (
@@ -387,19 +459,30 @@ const Overview = () => {
                       )}
                     </button>
                   </div>
-                ) : <div />}
+                ) : (
+                  <div />
+                )}
               </div>
 
               <div>
                 {interestInfo ? (
-                  <div className="cursor-pointer" onClick={() => setShowInterestModal(true)}>
-                    <p className="text-sm text-slate-600 mb-1 font-medium">Interest Accrued</p>
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => setShowInterestModal(true)}
+                  >
+                    <p className="text-sm text-slate-600 mb-1 font-medium">
+                      Interest Accrued
+                    </p>
                     <div className="text-green-600 font-bold text-lg underline decoration-dotted">
                       {formatCurrency(interestInfo.accruedAmount)}
                     </div>
-                    <p className="text-xs text-slate-500 font-medium">View breakdown &#8594;</p>
+                    <p className="text-xs text-slate-500 font-medium">
+                      View breakdown &#8594;
+                    </p>
                   </div>
-                ) : <div />}
+                ) : (
+                  <div />
+                )}
               </div>
             </div>
           </div>
@@ -416,7 +499,9 @@ const Overview = () => {
           {/* Recent Transactions */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-slate-900">Recent Transactions</h2>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Recent Transactions
+              </h2>
               <a
                 href="/dashboard/transactions"
                 className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
@@ -429,7 +514,10 @@ const Overview = () => {
             {transactionsLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse flex items-center space-x-3 p-3">
+                  <div
+                    key={i}
+                    className="animate-pulse flex items-center space-x-3 p-3"
+                  >
                     <div className="w-8 h-8 bg-slate-200 rounded-full" />
                     <div className="flex-1 space-y-2">
                       <div className="h-4 bg-slate-200 rounded w-3/4" />
@@ -442,13 +530,18 @@ const Overview = () => {
             ) : transactions.length > 0 ? (
               <div className="space-y-3">
                 {transactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-start space-x-3 p-3 hover:bg-slate-50 rounded-lg transition-colors">
+                  <div
+                    key={transaction.id}
+                    className="flex items-start space-x-3 p-3 hover:bg-slate-50 rounded-lg transition-colors"
+                  >
                     {getDirectionIcon(transaction.direction)}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="min-w-0 flex-1 mr-3">
                           <p className="text-sm font-semibold text-slate-900 truncate">
-                            {transaction.accountName || transaction.productName || "Transaction"}
+                            {transaction.accountName ||
+                              transaction.productName ||
+                              "Transaction"}
                           </p>
                           <p className="text-xs text-slate-500 truncate mt-0.5 leading-relaxed">
                             {transaction.narration}
@@ -460,8 +553,13 @@ const Overview = () => {
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className={`text-sm font-bold ${transaction.direction === "Credit" ? "text-green-600" : "text-red-600"}`}>
-                            {formatAmount(transaction.amount, transaction.direction)}
+                          <div
+                            className={`text-sm font-bold ${transaction.direction === "Credit" ? "text-green-600" : "text-red-600"}`}
+                          >
+                            {formatAmount(
+                              transaction.amount,
+                              transaction.direction,
+                            )}
                           </div>
                           {getStatusBadge(transaction.status)}
                         </div>
@@ -483,8 +581,15 @@ const Overview = () => {
       </div>
 
       {/* Modals */}
-      <InterestBreakdownModal isOpen={showInterestModal} onClose={() => setShowInterestModal(false)} />
-      <SetPinModal isOpen={showSetPinModal} onClose={() => setShowSetPinModal(false)} onSuccess={handlePinSetSuccess} />
+      <InterestBreakdownModal
+        isOpen={showInterestModal}
+        onClose={() => setShowInterestModal(false)}
+      />
+      <SetPinModal
+        isOpen={showSetPinModal}
+        onClose={() => setShowSetPinModal(false)}
+        onSuccess={handlePinSetSuccess}
+      />
       <StatementDownloadModal
         isOpen={showStatementModal}
         onClose={() => setShowStatementModal(false)}
@@ -494,14 +599,22 @@ const Overview = () => {
           else console.error("Download failed:", msg);
         }}
       />
-      <PayoutModal isOpen={showPayoutModal} onClose={() => setShowPayoutModal(false)} onSuccess={() => console.log("Payout successful")} />
+      <PayoutModal
+        isOpen={showPayoutModal}
+        onClose={() => setShowPayoutModal(false)}
+        onSuccess={() => console.log("Payout successful")}
+      />
       <VerificationRequiredModal
         isOpen={showVerificationModal}
         onClose={() => setShowVerificationModal(false)}
         verifications={verifications}
         customerType={customerType}
       />
-      <SubWalletsModal isOpen={subWalletsOpen} onClose={() => setSubWalletsOpen(false)} initialView={subWalletsInitialView} />
+      <SubWalletsModal
+        isOpen={subWalletsOpen}
+        onClose={() => setSubWalletsOpen(false)}
+        initialView={subWalletsInitialView}
+      />
     </div>
   );
 };
