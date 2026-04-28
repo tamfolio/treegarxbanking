@@ -215,7 +215,6 @@ const Overview = () => {
   const [subWalletsOpen, setSubWalletsOpen] = useState(false);
   const [subWalletsInitialView, setSubWalletsInitialView] = useState("list");
 
-  // Destructure accounts and accountNumber directly from the hook
   const {
     firstName,
     walletBalance,
@@ -225,8 +224,8 @@ const Overview = () => {
     profile,
     businessName,
     customerTypeCode,
-    accounts, // 👈 new
-    accountNumber, // 👈 new
+    accounts,
+    accountNumber,
   } = useProfileData();
 
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
@@ -408,25 +407,36 @@ const Overview = () => {
               <h2 className="text-lg font-semibold text-slate-900">
                 Total Balance
               </h2>
-              <button
-                onClick={() => setShowPayoutModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex items-center gap-2">
+                {/* ── Download Statement Button ── */}
+                <button
+                  onClick={() => setShowStatementModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-                Send Money
-              </button>
+                  <DocumentTextIcon className="w-4 h-4" />
+                  Download Statement
+                </button>
+                {/* ── Send Money Button ── */}
+                <button
+                  onClick={() => setShowPayoutModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                    />
+                  </svg>
+                  Send Money
+                </button>
+              </div>
             </div>
             <div className="text-4xl font-bold text-slate-900 mb-4">
               {totalBalance}
@@ -457,7 +467,7 @@ const Overview = () => {
 
               <div>
                 <p className="text-sm text-slate-600 mb-1 font-medium">Bank</p>
-                <div className="text-slate-900 font-bold">{BankName}</div>{" "}
+                <div className="text-slate-900 font-bold">{BankName}</div>
               </div>
 
               <div>
@@ -508,7 +518,7 @@ const Overview = () => {
             </div>
           </div>
 
-          {/* ── Accounts Carousel (replaces Quick Actions) ── */}
+          {/* Accounts Carousel */}
           <AccountsCarousel />
 
           <TransactionLimits />
