@@ -44,8 +44,18 @@ const InterestBreakdownModal = ({ isOpen, onClose }) => {
               <ArrowTrendingUpIcon className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Interest Breakdown</h2>
-              <p className="text-sm text-slate-500">Daily accrual for February 2026</p>
+              <h2 className="text-lg font-bold text-slate-900">
+                Interest Breakdown
+              </h2>
+              <p className="text-sm text-slate-500">
+                Daily accrual for{" "}
+                {breakdown
+                  ? new Date(breakdown.periodStart).toLocaleDateString(
+                      "en-NG",
+                      { month: "long", year: "numeric" },
+                    )
+                  : ""}
+              </p>
             </div>
           </div>
           <button
@@ -60,18 +70,26 @@ const InterestBreakdownModal = ({ isOpen, onClose }) => {
         {!isPending && !isError && breakdown && (
           <div className="grid grid-cols-3 gap-4 p-6 pb-0">
             <div className="bg-green-50 rounded-xl p-4">
-              <p className="text-xs text-green-600 font-medium mb-1">Total Accrued</p>
+              <p className="text-xs text-green-600 font-medium mb-1">
+                Total Accrued
+              </p>
               <p className="text-lg font-bold text-green-700">
                 {formatCurrency(breakdown.totalAccrued)}
               </p>
             </div>
             <div className="bg-blue-50 rounded-xl p-4">
-              <p className="text-xs text-blue-600 font-medium mb-1">Active Days</p>
-              <p className="text-lg font-bold text-blue-700">{activeDays.length} days</p>
+              <p className="text-xs text-blue-600 font-medium mb-1">
+                Active Days
+              </p>
+              <p className="text-lg font-bold text-blue-700">
+                {activeDays.length} days
+              </p>
             </div>
             <div className="bg-slate-50 rounded-xl p-4">
               <p className="text-xs text-slate-600 font-medium mb-1">Period</p>
-              <p className="text-lg font-bold text-slate-700">{breakdown.days} days</p>
+              <p className="text-lg font-bold text-slate-700">
+                {breakdown.days} days
+              </p>
             </div>
           </div>
         )}
@@ -81,7 +99,10 @@ const InterestBreakdownModal = ({ isOpen, onClose }) => {
           {isPending ? (
             <div className="space-y-3">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="animate-pulse flex items-center space-x-3 p-3 rounded-lg bg-slate-50">
+                <div
+                  key={i}
+                  className="animate-pulse flex items-center space-x-3 p-3 rounded-lg bg-slate-50"
+                >
                   <div className="w-10 h-10 bg-slate-200 rounded-lg"></div>
                   <div className="flex-1 space-y-2">
                     <div className="h-3 bg-slate-200 rounded w-1/4"></div>
@@ -96,7 +117,9 @@ const InterestBreakdownModal = ({ isOpen, onClose }) => {
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <XMarkIcon className="w-6 h-6 text-red-400" />
               </div>
-              <p className="text-slate-500 text-sm">Failed to load interest breakdown</p>
+              <p className="text-slate-500 text-sm">
+                Failed to load interest breakdown
+              </p>
             </div>
           ) : (
             <>
@@ -111,9 +134,10 @@ const InterestBreakdownModal = ({ isOpen, onClose }) => {
                 >
                   <div className="absolute inset-x-3 bottom-2 top-3 flex items-end gap-0.5">
                     {days.map((day) => {
-                      const heightPct = day.accruedAmount > 0
-                        ? Math.max((day.accruedAmount / maxAccrued) * 100, 12)
-                        : 5;
+                      const heightPct =
+                        day.accruedAmount > 0
+                          ? Math.max((day.accruedAmount / maxAccrued) * 100, 12)
+                          : 5;
                       return (
                         <div
                           key={day.day}
@@ -130,7 +154,8 @@ const InterestBreakdownModal = ({ isOpen, onClose }) => {
                           />
                           {day.accruedAmount > 0 && (
                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-slate-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
-                              {formatDate(day.applyDate)}: {formatCurrency(day.accruedAmount)}
+                              {formatDate(day.applyDate)}:{" "}
+                              {formatCurrency(day.accruedAmount)}
                             </div>
                           )}
                         </div>
@@ -139,8 +164,14 @@ const InterestBreakdownModal = ({ isOpen, onClose }) => {
                   </div>
                 </div>
                 <div className="flex justify-between mt-1">
-                  <span className="text-xs text-slate-400">Feb 1</span>
-                  <span className="text-xs text-slate-400">Feb 28</span>
+                  <span className="text-xs text-slate-400">
+                    {days.length > 0 ? formatDate(days[0].applyDate) : ""}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {days.length > 0
+                      ? formatDate(days[days.length - 1].applyDate)
+                      : ""}
+                  </span>
                 </div>
               </div>
 
@@ -150,7 +181,9 @@ const InterestBreakdownModal = ({ isOpen, onClose }) => {
                   Active Days
                 </p>
                 {activeDays.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-6">No interest accrued this period</p>
+                  <p className="text-sm text-slate-500 text-center py-6">
+                    No interest accrued this period
+                  </p>
                 ) : (
                   <div className="space-y-2">
                     {activeDays.map((day) => (
@@ -173,7 +206,8 @@ const InterestBreakdownModal = ({ isOpen, onClose }) => {
                             +{formatCurrency(day.accruedAmount)}
                           </p>
                           <p className="text-xs text-slate-400">
-                            Cumulative: {formatCurrency(day.cumulativeAccruedAmount)}
+                            Cumulative:{" "}
+                            {formatCurrency(day.cumulativeAccruedAmount)}
                           </p>
                         </div>
                       </div>
