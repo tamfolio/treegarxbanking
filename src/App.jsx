@@ -32,6 +32,7 @@ import Profile from "./Components/Dashboard/Profile";
 import EmailVerification from "./Components/Auth/EmailVerification";
 import Approvals from "./Components/Dashboard/Approvals";
 import ScheduledPayments from "./Components/Dashboard/ScheduledPayments";
+import Overdraft from "./Components/Dashboard/Overdraft";
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
             <Route index element={<Overview />} />
             <Route path="transactions" element={<Transactions />} />
             <Route path="accounts" element={<Accounts />} />
+            <Route path="overdraft" element={<Overdraft />} />
             <Route path="approvals" element={<Approvals />} />
             <Route path="beneficiaries" element={<Beneficiaries />} />
             <Route path="scheduled-payments" element={<ScheduledPayments />} />

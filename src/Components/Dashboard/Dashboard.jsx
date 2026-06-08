@@ -11,6 +11,7 @@ import {
   BanknotesIcon,
   ClipboardDocumentCheckIcon,
   CalendarDaysIcon,
+  CreditCardIcon,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeIconSolid,
@@ -20,6 +21,7 @@ import {
   BanknotesIcon as BanknotesIconSolid,
   ClipboardDocumentCheckIcon as ClipboardDocumentCheckIconSolid,
   CalendarDaysIcon as CalendarDaysIconSolid,
+  CreditCardIcon as CreditCardIconSolid,
 } from "@heroicons/react/24/solid";
 import { useProfileData } from "../../hooks/useProfile";
 import { getTimeBasedGreeting } from "../../utils/timeGreeting";
@@ -64,6 +66,12 @@ const Dashboard = () => {
       href: "/dashboard/accounts",
       icon: BanknotesIcon,
       iconSolid: BanknotesIconSolid,
+    },
+    {
+      name: "Overdraft",
+      href: "/dashboard/overdraft",
+      icon: CreditCardIcon,
+      iconSolid: CreditCardIconSolid,
     },
     {
       name: "Scheduled Payments",
