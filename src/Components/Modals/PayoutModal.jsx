@@ -19,6 +19,7 @@ const PayoutModal = ({
   onSuccess,
   prefilledData = {},
   bulkGroup = null,
+  sourceWalletId = null,
 }) => {
   const [transferType, setTransferType] = useState(
     bulkGroup ? "bulk" : "single"
@@ -173,6 +174,7 @@ const PayoutModal = ({
                     selectedBeneficiary={selectedBeneficiary}
                     onSuccess={handleTransferSuccess}
                     onClose={onClose}
+                    sourceWalletId={sourceWalletId}
                   />
                 ) : transferType === "tagpay" ? (
                   <TagPayForm
