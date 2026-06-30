@@ -17,6 +17,7 @@ const SingleTransferForm = ({
   selectedBeneficiary = null,
   onSuccess,
   onClose,
+  sourceWalletId = null,
 }) => {
   const [errors, setErrors] = useState({});
   const [showBankDropdown, setShowBankDropdown] = useState(false);
@@ -293,6 +294,7 @@ const SingleTransferForm = ({
       ...formData,
       beneficiaryName: resolvedAccount.accountName,
       bankName: selectedBank?.bankName || "Unknown Bank",
+      ...(sourceWalletId ? { sourceWalletId } : {}),
     };
 
     setPendingTransactionData(transactionData);

@@ -208,6 +208,7 @@ const SubWalletsPanel = ({ onOpenModal }) => {
 const Overview = () => {
   const [showStatementModal, setShowStatementModal] = useState(false);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showInterestPayoutModal, setShowInterestPayoutModal] = useState(false);
   const [copiedField, setCopiedField] = useState("");
   const [showSetPinModal, setShowSetPinModal] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -226,6 +227,7 @@ const Overview = () => {
     customerTypeCode,
     accounts,
     accountNumber,
+    interestWallet,
   } = useProfileData();
 
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
@@ -260,12 +262,12 @@ const Overview = () => {
       ? businessName || fallbackUserData.businessName || "Business"
       : firstName || fallbackUserData.firstName || "User";
 
-  const profileData = profile?.data || fallbackUserData;
-  const customerTag = profileData?.customer?.tag;
+  const fallbackCustomer = fallbackUserData?.customer || {};
+  const customerTag = profile?.tag || fallbackCustomer?.tag;
   const primaryAccount =
     accounts.find((a) => a.accountNumber === accountNumber) || accounts[0];
   const BankName = primaryAccount?.bankName || "—";
-  const interestInfo = profileData?.customer?.interest;
+  const interestInfo = profile?.interest || null;
   const transactions = transactionsData?.success
     ? transactionsData.data.items
     : [];
@@ -516,6 +518,27 @@ const Overview = () => {
                 )}
               </div>
             </div>
+
+            {interestWallet && interestWallet.currentBalance > 0 && (
+              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between bg-green-50 rounded-lg px-4 py-3">
+                <div>
+                  <p className="text-xs font-medium text-slate-500 mb-0.5">Interest Wallet</p>
+                  <p className="text-base font-bold text-green-700">
+                    {formatCurrency(interestWallet.currentBalance)}
+                  </p>
+                  <p className="text-xs text-slate-400">Available to withdraw</p>
+                </div>
+                <button
+                  onClick={() => setShowInterestPayoutModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Send
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Accounts Carousel */}
@@ -634,6 +657,12 @@ const Overview = () => {
         isOpen={showPayoutModal}
         onClose={() => setShowPayoutModal(false)}
         onSuccess={() => console.log("Payout successful")}
+      />
+      <PayoutModal
+        isOpen={showInterestPayoutModal}
+        onClose={() => setShowInterestPayoutModal(false)}
+        onSuccess={() => console.log("Interest wallet payout successful")}
+        sourceWalletId={interestWallet?.id}
       />
       <VerificationRequiredModal
         isOpen={showVerificationModal}

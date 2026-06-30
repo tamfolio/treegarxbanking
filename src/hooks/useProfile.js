@@ -81,8 +81,11 @@ export const useProfileData = () => {
     onboardingStatus: d?.onboardingStatus || null,
     verifications: d?.verifications || [],
     documents: d?.documents || [],
-    accounts: d?.accounts || [],       // 👈 added
-    accountNumber: d?.accountNumber || null,  // 👈 added
+    accounts: d?.accounts || [],
+    accountNumber: d?.accountNumber || null,
+    wallets: d?.wallets || [],
+    interestWallet: d?.wallets?.find((w) => w.walletType === 'Interest') || null,
+    overdraftWallet: d?.wallets?.find((w) => w.walletType === 'Overdraft') || null,
   };
 };
 

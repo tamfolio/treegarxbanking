@@ -83,6 +83,10 @@ export const transactionsService = {
       pin: payoutData.pin,
     };
   
+    if (payoutData.sourceWalletId) {
+      payload.sourceWalletId = payoutData.sourceWalletId;
+    }
+
     // Add OTP only if it exists
     if (payoutData.otpCode) {
       payload.otpCode = payoutData.otpCode;
