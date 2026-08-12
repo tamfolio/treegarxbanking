@@ -165,6 +165,16 @@ const Overdraft = () => {
             </button>
           </div>
         </div>
+        <AmountInputModal
+          isOpen={showApplyModal}
+          onClose={() => setShowApplyModal(false)}
+          onSubmit={handleApply}
+          title="Apply for Overdraft"
+          description="Enter the overdraft limit you'd like to request. This will be reviewed by our team."
+          ctaLabel="Submit Application"
+          ctaColorClass="bg-blue-600 hover:bg-blue-700"
+          isLoading={applyMutation.isLoading}
+        />
       </div>
     );
   }
@@ -237,6 +247,16 @@ const Overdraft = () => {
             </button>
           </div>
         </div>
+        <AmountInputModal
+          isOpen={showApplyModal}
+          onClose={() => setShowApplyModal(false)}
+          onSubmit={handleApply}
+          title="Apply for Overdraft"
+          description="Enter the overdraft limit you'd like to request. This will be reviewed by our team."
+          ctaLabel="Submit Application"
+          ctaColorClass="bg-blue-600 hover:bg-blue-700"
+          isLoading={applyMutation.isLoading}
+        />
       </div>
     );
   }
