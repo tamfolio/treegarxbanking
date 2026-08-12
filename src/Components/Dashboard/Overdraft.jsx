@@ -18,12 +18,14 @@ import {
   useApplyOverdraft,
   useDrawOverdraft,
   useRepayOverdraft,
+  useBanner,
 } from "../../hooks/useOverdraft";
 import AmountInputModal from "../Modals/AmountInputModal";
 
 const Overdraft = () => {
   const [showDrawModal, setShowDrawModal] = useState(false);
   const [showRepayModal, setShowRepayModal] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
@@ -47,6 +49,9 @@ const Overdraft = () => {
     { enabled: isApproved },
   );
 
+  const { data: bannerData } = useBanner();
+  const banner = bannerData?.data;
+
   const applyMutation = useApplyOverdraft();
   const drawMutation = useDrawOverdraft();
   const repayMutation = useRepayOverdraft();
@@ -55,16 +60,20 @@ const Overdraft = () => {
   const application = appData?.data;
   const interestHistory = interestData?.data;
 
-  const handleApply = () => {
-    applyMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast.success("Overdraft application submitted!");
-        refetchApp();
+  const handleApply = ({ amount: requestedAmount }) => {
+    applyMutation.mutate(
+      { requestedAmount },
+      {
+        onSuccess: () => {
+          toast.success("Overdraft application submitted!");
+          setShowApplyModal(false);
+          refetchApp();
+        },
+        onError: (err) => {
+          toast.error(err.message || "Failed to submit application");
+        },
       },
-      onError: (err) => {
-        toast.error(err.message || "Failed to submit application");
-      },
-    });
+    );
   };
 
   const handleDraw = ({ amount }) => {
@@ -149,11 +158,10 @@ const Overdraft = () => {
               anytime with no fixed schedule.
             </p>
             <button
-              onClick={handleApply}
-              disabled={applyMutation.isLoading}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+              onClick={() => setShowApplyModal(true)}
+              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors"
             >
-              {applyMutation.isLoading ? "Submitting..." : "Apply Now"}
+              Apply Now
             </button>
           </div>
         </div>
@@ -222,11 +230,10 @@ const Overdraft = () => {
               Reviewed on {formatDate(application.reviewedAt)}
             </p>
             <button
-              onClick={handleApply}
-              disabled={applyMutation.isLoading}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+              onClick={() => setShowApplyModal(true)}
+              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors"
             >
-              {applyMutation.isLoading ? "Submitting..." : "Reapply"}
+              Reapply
             </button>
           </div>
         </div>
@@ -384,13 +391,13 @@ const Overdraft = () => {
                         Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Amount
+                        Interest Charged
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Balance at Time
+                        Balance Charged On
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                        Rate Applied
+                        Running Total
                       </th>
                     </tr>
                   </thead>
@@ -398,18 +405,16 @@ const Overdraft = () => {
                     {interestHistory.items.map((item, idx) => (
                       <tr key={item.id || idx} className="hover:bg-slate-50">
                         <td className="px-6 py-4 text-sm text-slate-600">
-                          {formatDate(item.accruedAt || item.createdAt)}
+                          {formatDate(item.date)}
                         </td>
                         <td className="px-6 py-4 font-semibold text-slate-900">
-                          {formatNaira(item.interestAmount || item.amount)}
+                          {formatNaira(item.dailyInterestCharged)}
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-600">
-                          {formatNaira(item.outstandingBalance || item.balance)}
+                          {formatNaira(item.balanceChargedOn)}
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-600">
-                          {item.rate
-                            ? `${(parseFloat(item.rate) * 100).toFixed(2)}%`
-                            : "—"}
+                          {formatNaira(item.runningAccruedInterest)}
                         </td>
                       </tr>
                     ))}
@@ -444,6 +449,18 @@ const Overdraft = () => {
           )}
         </div>
       </div>
+
+      {/* Apply Modal */}
+      <AmountInputModal
+        isOpen={showApplyModal}
+        onClose={() => setShowApplyModal(false)}
+        onSubmit={handleApply}
+        title="Apply for Overdraft"
+        description="Enter the overdraft limit you'd like to request. This will be reviewed by our team."
+        ctaLabel="Submit Application"
+        ctaColorClass="bg-blue-600 hover:bg-blue-700"
+        isLoading={applyMutation.isLoading}
+      />
 
       {/* Draw Modal */}
       <AmountInputModal
