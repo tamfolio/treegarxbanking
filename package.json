@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node api.js && vite",
+    "build": "node api.js && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "security-check": "grep -rE '[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}' ./dist && echo '❌ Email found in build output' && exit 1 || echo '✅ Clean'"
+    "security-check": "grep -rE '[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}' ./dist && echo '\u274c Email found in build output' && exit 1 || echo '\u2705 Clean'"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
