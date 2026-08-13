@@ -33,9 +33,11 @@ export const overdraftService = {
     }
   },
 
-  applyForOverdraft: async () => {
+  applyForOverdraft: async ({ requestedAmount }) => {
     try {
-      const response = await apiClient.post("/customer/overdraft/apply");
+      const response = await apiClient.post("/customer/overdraft/apply", {
+        requestedAmount: parseFloat(requestedAmount),
+      });
       return response.data;
     } catch (error) {
       const apiErrorMessage = extractApiErrorMessage(error);
@@ -91,6 +93,18 @@ export const overdraftService = {
       `/customer/overdraft/interest-history?${params.toString()}`
     );
     return response.data;
+  },
+
+  getBanner: async () => {
+    try {
+      const response = await apiClient.get("/customer/banner");
+      return response.data;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return { success: true, data: null };
+      }
+      throw error;
+    }
   },
 };
 

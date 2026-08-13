@@ -21,12 +21,17 @@ import TransactionLimits from "./TransactionLimit";
 import VerificationRequiredModal from "../Modals/VerificationRequiredModal";
 import SubWalletsModal from "../Modals/SubWalletsModal";
 import { useWallets } from "../../hooks/useWallets";
+import { useBanner } from "../../hooks/useOverdraft";
 import AccountsCarousel from "./AccountsCarousel";
 
 // ─── Marquee Banner ───────────────────────────────────────────────────────────
 const MarqueeBanner = () => {
-  const message =
-    "🎉 Earn 20% per annum on your Nexus wallet balance — funds grow automatically every day!  ✨ Your money works for you — 20% p.a. interest, no hidden fees.  📈 20% annual interest credited daily. Keep saving, keep earning!";
+  const { data: bannerData } = useBanner();
+  const banner = bannerData?.data;
+
+  if (!banner) return null;
+
+  const message = `${banner.header}  —  ${banner.body}`;
   const repeated = `${message}          ${message}`;
 
   return (
@@ -34,7 +39,7 @@ const MarqueeBanner = () => {
       <div className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-blue-600">
         <MegaphoneIcon className="h-3.5 w-3.5 text-white shrink-0" />
         <span className="text-[10px] font-bold text-white tracking-wide uppercase whitespace-nowrap">
-          20% p.a.
+          Notice
         </span>
       </div>
       <div className="flex-1 overflow-hidden py-2 px-2">
