@@ -92,9 +92,9 @@ export const useLogin = () => {
           // Store user data
           localStorage.setItem('userData', JSON.stringify(userData));
           
-          // Invalidate and refetch user data
-          queryClient.invalidateQueries({ queryKey: ['auth'] });
-          
+          // Clear all cached data from any previous user session
+          queryClient.clear();
+
           navigate('/dashboard');
           toast.success('Login successful');
         }

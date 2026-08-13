@@ -37,6 +37,18 @@ export const useInterestHistory = (filters = {}, options = {}) => {
   });
 };
 
+export const useBanner = (options = {}) => {
+  return useQuery({
+    queryKey: ["customer-banner"],
+    queryFn: overdraftService.getBanner,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 15 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+};
+
 export const useApplyOverdraft = () => {
   const queryClient = useQueryClient();
   return useMutation({
